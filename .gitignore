@@ -1,0 +1,6 @@
+tmp
+*.swp
+.idea
+build
+dist
+pyportify.egg-info

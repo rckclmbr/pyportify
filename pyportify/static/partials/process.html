@@ -1,0 +1,48 @@
+<div ng-hide="alldone" class="process_top">{{status}}</div>
+<div ng-show="alldone" ng-animate="{enter: 'done-anim-enter' }" class="done">
+    <h1>All playlists transfered.</h1>
+    <a ng-click="showMissing()">Show tracks not found on Google Music</a><br/>
+    <a href="#/spotify/playlists/select">Transfer more playlists</a><br/>
+    <a href="#/">Start over</a>
+</div>
+
+<div ng-show="shownotfound" ng-animate="{enter: 'done-anim-enter' }" class="notfound">
+    <a ng-click="hideMissing()">&laquo; Back</a><br/><br/>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Artist</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="nf in notfound">
+                <td>{{nf.artist[0].name}}</td>
+                <td>{{nf.name}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div ng-class="{blur:alldone}" id="process" class="card portify process coverbg">
+    <div ng-show="processing" class="current_playlist" ng-model="currentPlaylist" ng-animate="{show: 'simpleprocess-anim-enter', hide: 'simpleprocess-anim-leave' }">
+        <div class="progress">
+            <div class="bar" ng-style="{width: currentPlaylist.progress}"></div>
+        </div>
+        <div class="process_details">
+            <h1>{{currentPlaylist.name}}</h1>
+            <div style="float: left; width: 30%;">
+                <i class="icon-ok-sign"></i> Found:<br/>
+                <span>{{currentPlaylist.found}}</span>
+            </div>
+            <div style="float: left; width: 30%;">
+                <i class="icon-remove-sign"></i> Not found:<br/>
+                <span>{{currentPlaylist.notfound}}</span>
+            </div>
+            <div style="float: left; width: 38%;">
+                <i class="icon-bullhorn"></i> Filtered Karaoke:<br/>
+                <span>{{currentPlaylist.karaoke}}</span>
+            </div>
+        </div>
+    </div>
+</div>

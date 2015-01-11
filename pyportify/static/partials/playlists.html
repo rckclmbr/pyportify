@@ -1,0 +1,29 @@
+<div class="card spotify">
+    <div class="row">
+        <legend><img src="/img/s.png"/> Your Spotify Plalists</legend>
+        <div style="margin-left: 20px;">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Transfer to Google Music?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="playlist in playlists">
+                        <td>{{playlist.name}}</td>
+                        <td>
+                            <input type="checkbox" ng-checked="playlist.transfer" ng-model="playlist.transfer">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span3"><input type="checkbox" ng-click="selectAll($event)"/> select all</div>
+        <div class="pull-right">
+            Ready? <a class="btn btn-success" ng-click="startTransfer()">Start Transfer</a>
+        </div>
+    </div>
+</div>

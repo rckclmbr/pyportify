@@ -1,0 +1,24 @@
+<div class="card google">
+    <form ng-submit="googleLogin()">
+        <fieldset>
+            <div class="row">
+                    <legend><img src="/img/g.png"/> Login to Google</legend>
+            </div>
+            <div class="row">
+                <div class="span3">
+                    <label>E-Mail:</label>
+                    <input type="text" ng-model="loginData.email" required  placeholder="E-Mail">
+                    <label>Password</label>
+                    <input type="password" ng-model="loginData.password" required  placeholder="Password">
+                    <button type="submit" class="btn btn-info">Submit</button>
+                </div>
+                <div class="span5 pull-right">
+                    <div class="alert alert-info fade in">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <strong>Heads up!</strong> Please make sure you use a Google account with Music: All Access.
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>

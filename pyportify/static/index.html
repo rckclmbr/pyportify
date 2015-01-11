@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html ng-app="portify">
+  <head>
+    <title>Portify</title>
+    <!-- Bootstrap -->
+    <link href="/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/flat-ui.css" rel="stylesheet" >
+	<link href="/css/app.css" rel="stylesheet">
+    <link href="/css/animate.min.css" rel="stylesheet">
+    <link href="/css/font-awesome.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div ng-controller="MainCtrl">
+        <div ng-view  class="container" ng-animate="{enter: 'view-anim-enter', leave: 'view-anim-leave'}"></div>
+        <div class="bottom_bar">
+            <div class="btn-toolbar pull-left">
+                <div class="btn-group">
+                    <a class="btn btn-primary" ng-class="(step==0) ? 'active' : ''"><b>Start</b></a>
+                    <a class="btn btn-primary" ng-class="{active: 1==step}"><b>1</b></a>
+                    <a class="btn btn-primary" ng-class="{active: 2==step}"><b>2</b></i></a>
+                    <a class="btn btn-primary" ng-class="{active: 3==step}"><b>3</b></a>
+                    <a class="btn btn-primary" ng-class="{active: 4==step}"><b>4</b></i></a>
+                </div>
+            </div>
+            <div class="additional_bottom pull-right" ng-bind-html-unsafe="link">
+
+            </div>
+        </div>
+    </div>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/flatui-checkbox.js"></script>
+    <script src="/js/flatui-radio.js"></script>
+	<script src="/js/socket.io.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="/js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script src="/js/imagesloaded.pkgd.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
+	<script src="/js/controllers.js"></script>
+	<script src="/js/app.js"></script>
+  </body>
+</html>

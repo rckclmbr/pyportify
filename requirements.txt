@@ -1,0 +1,4 @@
+cherrypy
+django==1.7.2
+pyspotify
+gmusicapi

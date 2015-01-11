@@ -1,0 +1,13 @@
+<div ng-hide="alldone" class="process_top">{{status}}</div>
+<div ng-show="alldone" ng-animate="{enter: 'done-anim-enter' }" class="done">
+    <h1>All playlists transfered.</h1>
+</div>
+
+<div ng-class="{blur:alldone}" id="process" scroll-glue class="card portify process">
+        <div ng-repeat="image in ttracks" ng-animate="{enter: 'album-anim-enter' }" ng-class='image.class'>
+                <i ng-show="image.ok" class="ok icon-ok-sign icon-5"></i>
+                <i ng-show="image.nok" class="nok icon-remove-sign"></i>
+            <img id="item{{image.id}}" ng-src='{{image.src}}'>
+        </div>
+</div>
+
