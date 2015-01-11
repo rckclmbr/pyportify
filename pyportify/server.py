@@ -11,7 +11,7 @@ def main():
 
     server.socket_host = "0.0.0.0"
     server.socket_port = 3132
-    server.thread_pool = 5
+    server.thread_pool = 10
 
     server.subscribe()
 

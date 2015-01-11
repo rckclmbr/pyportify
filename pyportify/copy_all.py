@@ -1,6 +1,11 @@
 from getpass import getpass
 import json
+import os
 import sys
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pyportify.settings")
+import django
+django.setup()
 
 from pyportify import views as app
 

@@ -146,6 +146,8 @@ def transfer_playlists(playlists):
         sp_playlist = s.get_playlist(d_list["uri"])
         gm_track_ids = []
 
+        print "Gathering tracks for playlist %s" % sp_playlist.name
+
         track_count = len(sp_playlist.tracks)
         for i, sp_track in enumerate(sp_playlist.tracks):
             sp_track.load()
@@ -166,6 +168,7 @@ def transfer_playlists(playlists):
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
-            print "Done fetching album, creating in Google Music"
+            print "Creating in Google Music... ",
             playlist_id = g.create_playlist(sp_playlist.name)
             g.add_songs_to_playlist(playlist_id, gm_track_ids)
+            print "Done"
