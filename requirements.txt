@@ -1,4 +1,4 @@
 cherrypy
 django==1.7.2
-pyspotify
+pyspotify==2.0.0b3
 gmusicapi

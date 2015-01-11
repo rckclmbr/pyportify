@@ -14,7 +14,7 @@ with open('requirements.txt') as reqs:
 
 setup(
     name='pyportify',
-    version=__import__('pyportify').__version__,
+    version="0.1.0",
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
