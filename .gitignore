@@ -1,5 +1,6 @@
 tmp
 *.swp
+*.pyc
 .idea
 build
 dist

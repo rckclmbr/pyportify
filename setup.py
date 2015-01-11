@@ -31,6 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'pyportify = pyportify.server:main',
+            'pyportify-copyall = pyportify.copy_all:main',
         ],
     },
     data_files=(

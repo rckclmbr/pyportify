@@ -3,6 +3,7 @@
 from pyportify.wsgi import application
 import cherrypy
 
+
 def main():
     cherrypy.tree.graft(application, "/")
     cherrypy.server.unsubscribe()

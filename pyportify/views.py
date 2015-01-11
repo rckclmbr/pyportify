@@ -110,7 +110,7 @@ def transfer_start(request):
     if not lists:
         return JsonResponse({"status": 403, "message": "Please select at least one playlist."})
 
-    #start_transfer(lists)
+    transfer_playlists(lists)
     return JsonResponse({"status": 200, "message": "transfer will start."})
 
 
@@ -134,3 +134,38 @@ def spotify_playlists(request):
         ret_playlists.append(plist)
 
     return JsonResponse({"status": 200, "message": "ok", "data": ret_playlists})
+
+
+def transfer_playlists(playlists):
+    s = user_scope.spotify_session
+    g = user_scope.googleapi
+    for d_list in playlists:
+        if ":starred" in d_list["uri"]:
+            # TODO: Starred list
+            continue
+        sp_playlist = s.get_playlist(d_list["uri"])
+        gm_track_ids = []
+
+        track_count = len(sp_playlist.tracks)
+        for i, sp_track in enumerate(sp_playlist.tracks):
+            sp_track.load()
+            if sp_track.artists:
+                sp_artist = sp_track.artists[0]
+            else:
+                sp_artist = None
+
+            search_query = "%s - %s" % (sp_artist.name, sp_track.name)
+            search_results = g.search_all_access(search_query, max_results=1)
+            songs = search_results.get("song_hits")
+            if songs:
+                gm_track_id = songs[0]["track"]["nid"]
+                gm_track_ids.append(gm_track_id)
+                print "(%s/%s) Found '%s' in Google Music" % (i+1, track_count, search_query)
+            else:
+                print "(%s/%s) No match found for '%s'" % (i+1, track_count, search_query)
+
+        # Once we have all the gm_trackids, add them
+        if len(gm_track_ids) > 0:
+            print "Done fetching album, creating in Google Music"
+            playlist_id = g.create_playlist(sp_playlist.name)
+            g.add_songs_to_playlist(playlist_id, gm_track_ids)
