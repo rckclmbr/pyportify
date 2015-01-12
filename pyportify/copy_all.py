@@ -33,10 +33,6 @@ def main():
         print "Invalid Spotify username/password"
         sys.exit(1)
 
-    ps = app.user_scope.googleapi.get_all_playlists()
-    for p in ps:
-        app.user_scope.googleapi.delete_playlist(p["id"])
-
     playlists = app.spotify_playlists(None)
     playlists = json.loads(playlists.content)["data"]
 
