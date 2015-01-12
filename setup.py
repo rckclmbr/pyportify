@@ -19,7 +19,7 @@ with open(requirements_txt) as reqs:
 
 setup(
     name='pyportify',
-    version="0.1.5",
+    version="0.1.6",
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
@@ -42,7 +42,6 @@ setup(
     data_files=(
         ('', [
         "LICENSE.txt",
-        "README.md",
         ]),
     ),
     zip_safe=False,
