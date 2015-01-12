@@ -1,12 +1,11 @@
 function MainCtrl($scope, $route, $routeParams, $location, context) {
 	$scope.context = context.items();
-	$scope.app_name = "Portify";
-	$scope.app_version = "0.0.5.1";
+	$scope.app_name = "Pyportify";
 }
 
 function WelcomeCtrl($scope, $rootScope, $route, $routeParams, $location) {
 	$rootScope.step = 0;
-	$rootScope.link = '<a href="#/about" class="btn btn-danger">About Portify</a>';
+	$rootScope.link = '<a href="#/about" class="btn btn-danger">About Pyportify</a>';
 }
 
 function AboutCtrl($scope, $rootScope, $route, $routeParams, $location) {
@@ -22,7 +21,7 @@ function ProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $routeP
 
 	$scope.notfound = [];
 	$scope.shownotfound = false;
-	
+
 	$scope.currentPlaylist = {
 		name: "",
 		processed: 0,
