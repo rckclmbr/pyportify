@@ -41,7 +41,7 @@ setup(
     },
     data_files=(
         ('', [
-        "LICENSE",
+        "LICENSE.txt",
         "README.md",
         ]),
     ),
