@@ -8,6 +8,7 @@ install:
   - "sudo apt-get install python-all-dev libffi-dev libspotify-dev"
   - "pip install -r requirements.txt"
   - "pip install ."
+script: ./manage.py test
 deploy:
   provider: pypi
   user: jbraegger
