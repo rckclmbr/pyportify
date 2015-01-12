@@ -15,6 +15,6 @@ deploy:
   password:
     secure: P3dSxH4hgJ6JdnGc4zcCneM/jn2qczOh11uxFSJGHEvkMvL4vOrZ0yOiE8BBInUBeT/4kVfWNuBghibS1P06AlWWvUz66KHc719mpHBA3On+q/0troVXT1Pl9xiEr8ITvQda7wWgSZaxSVpaZnkMJZQQkR3ucc7p6qm4mygPyjs=
   on:
-    tags: true
+    all_branches: true
     repo: rckclmbr/pyportify
-    branch: master
+    tags: true
