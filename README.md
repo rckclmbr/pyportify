@@ -16,6 +16,8 @@ You can read about portify here: [http://www.maui.at/2013/06/portify/](http://ww
 Install
 -------
 
+OSX:
+
 ```bash
 # Install libspotify
 $ brew install homebrew/binary/libspotify
@@ -24,6 +26,16 @@ $ sudo ln -s /usr/local/opt/libspotify/lib/libspotify.12.1.51.dylib \
 /usr/local/opt/libspotify/lib/libspotify
 # Install pyportify
 $ pip install pyportify
+```
+
+Ubuntu:
+
+```bash
+curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -
+sudo curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list
+sudo apt-get update
+sudo apt-get install -y python-pip python-dev libffi-dev libspotify-dev
+sudo pip install pyportify
 ```
 
 Running
