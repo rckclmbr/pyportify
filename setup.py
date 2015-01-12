@@ -25,7 +25,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     url='https://github.com/rckclmbr/pyportify',
-    license='BSD',
+    license='Apache 2.0',
     description='Django app to transfer your spotify playlists to Google Play '
                 'Music',
     long_description=long_description,
