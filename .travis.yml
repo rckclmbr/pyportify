@@ -9,6 +9,7 @@ install:
   - "pip install -r requirements.txt"
   - "pip install ."
 script: ./manage.py test
+before_deploy: "apt-get install pandoc && pandoc -f markdown -t rst -o README.rst README.md"
 deploy:
   provider: pypi
   user: jbraegger

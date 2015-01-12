@@ -11,6 +11,7 @@ RUN apt-get install -y python-pip python-dev libffi-dev libspotify-dev
 RUN pip install virtualenv && virtualenv --system-site-packages /ve
 
 ADD . /app/
+RUN touch /app/README.rst
 RUN /ve/bin/pip install -r /app/requirements.txt
 RUN /ve/bin/pip install /app/
 

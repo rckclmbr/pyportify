@@ -3,7 +3,7 @@
 from distutils.core import setup
 from setuptools import find_packages
 
-with open('README.md') as readme:
+with open('README.rst') as readme:
     long_description = readme.read()
 
 with open('requirements.txt') as reqs:
@@ -14,7 +14,7 @@ with open('requirements.txt') as reqs:
 
 setup(
     name='pyportify',
-    version="0.1.2",
+    version="0.1.3",
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
