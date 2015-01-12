@@ -141,9 +141,10 @@ def transfer_playlists(playlists):
     g = user_scope.googleapi
     for d_list in playlists:
         if ":starred" in d_list["uri"]:
-            # TODO: Starred list
-            continue
-        sp_playlist = s.get_playlist(d_list["uri"])
+            sp_playlist = s.get_starred()
+            sp_playlist.name = 'Starred Tracks'
+        else:
+            sp_playlist = s.get_playlist(d_list["uri"])
         gm_track_ids = []
 
         print "Gathering tracks for playlist %s" % sp_playlist.name
