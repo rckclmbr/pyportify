@@ -2,11 +2,16 @@
 # -*- coding: utf-8 -*-
 from distutils.core import setup
 from setuptools import find_packages
+import os
 
-with open('README.rst') as readme:
+basepath = os.path.dirname(__file__)
+readme_rst = os.path.join(basepath, "README.rst")
+requirements_txt = os.path.join(basepath, "requirements.txt")
+
+with open(readme_rst) as readme:
     long_description = readme.read()
 
-with open('requirements.txt') as reqs:
+with open(requirements_txt) as reqs:
     install_requires = [
         line for line in reqs.read().split('\n') if (line and not
                                                      line.startswith('--'))

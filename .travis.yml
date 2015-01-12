@@ -5,11 +5,11 @@ install:
   - "wget -O - http://apt.mopidy.com/mopidy.gpg | sudo apt-key add -"
   - "sudo wget -O /etc/apt/sources.list.d/mopidy.list http://apt.mopidy.com/mopidy.list"
   - "sudo apt-get update"
-  - "sudo apt-get install python-all-dev libffi-dev libspotify-dev"
+  - "sudo apt-get install python-all-dev libffi-dev libspotify-dev pandoc"
+  - "pandoc -f markdown -t rst -o README.rst README.md"
   - "pip install -r requirements.txt"
   - "pip install ."
 script: ./manage.py test
-before_deploy: "apt-get install pandoc && pandoc -f markdown -t rst -o README.rst README.md"
 deploy:
   provider: pypi
   user: jbraegger
