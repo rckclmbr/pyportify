@@ -38,6 +38,15 @@ sudo apt-get install -y python-pip python-dev libffi-dev libspotify-dev
 sudo pip install pyportify
 ```
 
+Fedora 
+
+```bash
+sudo rpm -ivh http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(grep -o [0-9]* /etc/fedora-release).noarch.rpm
+sudo yum update
+sudo yum -y install python-pip python-devel libffi-devel libspotify-devel
+sudo pip install pyportify
+```
+
 Running
 -------
 
