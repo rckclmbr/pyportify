@@ -17,8 +17,11 @@ Install
 -------
 
 ```bash
-# Install libspotify (https://pyspotify.mopidy.com/en/latest/installation/)
-$ brew install --pre libspotify
+# Install libspotify
+$ brew install homebrew/binary/libspotify
+# Workaround on OSX (see https://pyspotify.mopidy.com/en/latest/installation/)
+$ sudo ln -s /usr/local/opt/libspotify/lib/libspotify.12.1.51.dylib \
+/usr/local/opt/libspotify/lib/libspotify
 # Install pyportify
 $ pip install pyportify
 ```

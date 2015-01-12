@@ -12,7 +12,6 @@ RUN pip install virtualenv && virtualenv --system-site-packages /ve
 
 ADD . /app/
 RUN /ve/bin/pip install -r /app/requirements.txt
-RUN /ve/bin/pip install --upgrade six
 RUN /ve/bin/pip install /app/
 
 EXPOSE 3132
