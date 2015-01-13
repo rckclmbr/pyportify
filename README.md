@@ -41,9 +41,9 @@ sudo pip install pyportify
 Fedora 
 
 ```bash
-sudo rpm -ivh http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(grep -o [0-9]* /etc/fedora-release).noarch.rpm
-sudo yum update
-sudo yum -y install python-pip python-devel libffi-devel libspotify-devel
+yum -y localinstall --nogpgcheck http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo yum check-update
+sudo yum -y install gcc python-pip python-devel libffi-devel libspotify-devel
 sudo pip install pyportify
 ```
 
