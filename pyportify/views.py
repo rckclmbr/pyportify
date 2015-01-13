@@ -126,6 +126,8 @@ def spotify_playlists(request):
     }]
 
     for playlist in playlists:
+        if isinstance(playlist, spotify.PlaylistFolder):
+            continue
         playlist.load()
         plist = {
             "name": playlist.name,
