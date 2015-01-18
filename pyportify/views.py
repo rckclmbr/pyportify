@@ -149,7 +149,8 @@ def transfer_playlists(playlists):
             sp_playlist = s.get_playlist(d_list["uri"])
         gm_track_ids = []
 
-        print "Gathering tracks for playlist %s" % sp_playlist.name
+        playlist_name_ascii = sp_playlist.name.encode('utf8', 'replace')
+        print "Gathering tracks for playlist %s" % playlist_name_ascii
 
         track_count = len(sp_playlist.tracks)
         for i, sp_track in enumerate(sp_playlist.tracks):
@@ -160,14 +161,15 @@ def transfer_playlists(playlists):
                 sp_artist = None
 
             search_query = "%s - %s" % (sp_artist.name, sp_track.name)
+            search_query_ascii = search_query.encode("utf-8", "replace")
             search_results = g.search_all_access(search_query, max_results=1)
             songs = search_results.get("song_hits")
             if songs:
                 gm_track_id = songs[0]["track"]["nid"]
                 gm_track_ids.append(gm_track_id)
-                print "(%s/%s) Found '%s' in Google Music" % (i+1, track_count, search_query)
+                print "(%s/%s) Found '%s' in Google Music" % (i+1, track_count, search_query_ascii)
             else:
-                print "(%s/%s) No match found for '%s'" % (i+1, track_count, search_query)
+                print "(%s/%s) No match found for '%s'" % (i+1, track_count, search_query_ascii)
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
