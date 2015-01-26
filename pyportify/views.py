@@ -13,6 +13,7 @@ class UserScope(object):
         self.googleapi = Mobileclient()
 
         config = spotify.Config()
+        config.cache_location = ""
         config.load_application_key_file(settings.SPOTIFY_APPKEY)
         self.spotify_session = spotify.Session(config)
         self.loop = spotify.EventLoop(self.spotify_session)
