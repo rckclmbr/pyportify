@@ -19,7 +19,7 @@ with open(requirements_txt) as reqs:
 
 setup(
     name='pyportify',
-    version="0.1.10",
+    version="0.1.11",
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
