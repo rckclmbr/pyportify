@@ -32,7 +32,7 @@ Ubuntu:
 
 ```bash
 curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -
-sudo sh -c “curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list”
+sudo sh -c 'curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list'
 sudo apt-get update
 sudo apt-get install -y python-pip python-dev libffi-dev libspotify-dev
 sudo pip install pyportify
