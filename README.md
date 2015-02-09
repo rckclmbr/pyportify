@@ -5,7 +5,7 @@ A port of [portify](https://github.com/mauimauer/portify) to python.
 
 But it actually works.
 
-Transfers your Spotify playlists to Google Music: All Access
+Transfers your Spotify Premium playlists to Google Music: All Access
 
 By using Pyportify you may violate both Spotify's and Google's Terms of Service. You agree that
 you are using Pyportify on your own risk. The author does not accept liability (as far as permitted by law) for any loss arising from any use of this tool.
@@ -32,7 +32,7 @@ Ubuntu:
 
 ```bash
 curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -
-sudo sh -c “curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list”
+sudo sh -c 'curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list'
 sudo apt-get update
 sudo apt-get install -y python-pip python-dev libffi-dev libspotify-dev
 sudo pip install pyportify
