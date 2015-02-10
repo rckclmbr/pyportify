@@ -1,5 +1,5 @@
 cherrypy
-django==1.7.2
+flask
 pyspotify==2.0.0b3
 gmusicapi==4.0.0
 six>=1.6.1

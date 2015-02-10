@@ -1,10 +1,16 @@
 import json
+import os
 import threading
-from django.conf import settings
 
-from django.http import JsonResponse
+from flask import Flask, jsonify, send_from_directory, request
 from gmusicapi import Mobileclient
 import spotify
+
+app = Flask(__name__)
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+SPOTIFY_APPKEY = os.path.join(BASE_DIR, "spotify_appkey.key")
 
 
 class UserScope(object):
@@ -13,11 +19,16 @@ class UserScope(object):
         self.googleapi = Mobileclient()
 
         config = spotify.Config()
-        config.cache_location = ""
-        config.load_application_key_file(settings.SPOTIFY_APPKEY)
+        config.cache_location = "tmp"
+        print "TEST1"
+        config.load_application_key_file(SPOTIFY_APPKEY)
+        print "TEST2"
         self.spotify_session = spotify.Session(config)
+        print "TEST3"
         self.loop = spotify.EventLoop(self.spotify_session)
+        print "TEST4"
         self.logged_in_event = threading.Event()
+        print "TEST5"
         self._google_loggedin = False
 
     def _logged_in_listener(self, session, error_type):
@@ -59,63 +70,67 @@ user_scope = UserScope()
 user_scope.start()
 
 
-def google_login(request):
+@app.route("/google/login", methods=["POST",])
+def google_login():
 
-    data = json.loads(request.body)
+    data = request.get_json()
 
     email = data.get("email")
     password = data.get("password")
 
     user_scope.google_login(email, password)
     if not user_scope.google_loggedin():
-        return JsonResponse(dict(
+        return jsonify(dict(
             status=400,
             message="login failed.",
         ))
 
-    return JsonResponse(dict(
+    return jsonify(dict(
         status=200,
         message="login successful."
     ))
 
 
-def spotify_login(request):
+@app.route("/spotify/login", methods=["POST",])
+def spotify_login():
 
-    data = json.loads(request.body)
+    data = request.get_json()
 
     username = data.get("username")
     password = data.get("password")
 
     user_scope.spotify_login(username, password)
     if not user_scope.spotify_loggedin():
-        return JsonResponse(dict(
+        return jsonify(dict(
             status=400,
             message="login failed.",
         ))
-    return JsonResponse(dict(
+    return jsonify(dict(
         status=200,
         message="login successful."
     ))
 
 
-def transfer_start(request):
+@app.route("/portify/transfer/start", methods=["POST"])
+def transfer_start():
 
-    lists = json.loads(request.body)
+    lists = request.get_json()
 
     if not user_scope.google_loggedin():
-        return JsonResponse({"status": 401, "message": "Google: not logged in."})
+        return jsonify({"status": 401, "message": "Google: not logged in."})
 
     if not user_scope.spotify_loggedin():
-        return JsonResponse({"status": 402, "message": "Spotify: not logged in."})
+        return jsonify({"status": 402, "message": "Spotify: not logged in."})
 
     if not lists:
-        return JsonResponse({"status": 403, "message": "Please select at least one playlist."})
+        return jsonify({"status": 403, "message": "Please select at least one playlist."})
 
     transfer_playlists(lists)
-    return JsonResponse({"status": 200, "message": "transfer will start."})
+    return jsonify({"status": 200, "message": "transfer will start."})
 
 
-def spotify_playlists(request):
+@app.route("/spotify/playlists")
+def spotify_playlists():
 
     container = user_scope.spotify_session.playlist_container
     playlists = container.load()
@@ -136,7 +151,13 @@ def spotify_playlists(request):
         }
         ret_playlists.append(plist)
 
-    return JsonResponse({"status": 200, "message": "ok", "data": ret_playlists})
+    return jsonify({"status": 200, "message": "ok", "data": ret_playlists})
+
+
+@app.route("/", defaults={'path': 'index.html'})
+@app.route("/<path:path>")
+def base(path):
+    return send_from_directory(STATIC_ROOT, path)
 
 
 def transfer_playlists(playlists):
@@ -178,3 +199,8 @@ def transfer_playlists(playlists):
             playlist_id = g.create_playlist(sp_playlist.name)
             g.add_songs_to_playlist(playlist_id, gm_track_ids)
             print "Done"
+
+
+if __name__ == "__main__":
+    app.debug = True
+    app.run()

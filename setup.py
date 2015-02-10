@@ -4,6 +4,13 @@ from distutils.core import setup
 from setuptools import find_packages
 import os
 
+import pyportify
+import pyportify.views
+try:
+    import py2exe
+except:
+    pass
+
 basepath = os.path.dirname(__file__)
 readme_rst = os.path.join(basepath, "README.rst")
 requirements_txt = os.path.join(basepath, "requirements.txt")
@@ -19,19 +26,22 @@ with open(requirements_txt) as reqs:
 
 setup(
     name='pyportify',
-    version="0.1.11",
+    version=pyportify.__version__,
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
     include_package_data=True,
     url='https://github.com/rckclmbr/pyportify',
     license='Apache 2.0',
-    description='Django app to transfer your spotify playlists to Google Play '
+    description='App to transfer your spotify playlists to Google Play '
                 'Music',
     long_description=long_description,
     classifiers=[
         'Environment :: Web Environment',
-        'Framework :: Django',
+        'Framework :: Flask',
+    ],
+    console=[
+        "pyportify/server.py",
     ],
     entry_points={
         'console_scripts': [

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from pyportify.wsgi import application
+from pyportify.views import app
 import cherrypy
 
 
 def main():
-    cherrypy.tree.graft(application, "/")
+    cherrypy.tree.graft(app, "/")
     cherrypy.server.unsubscribe()
     server = cherrypy._cpserver.Server()
 
