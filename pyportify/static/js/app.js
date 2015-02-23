@@ -69,7 +69,7 @@ angular.module('portify', []).
 		return context;
 	}).
 	factory('socket', function ($rootScope) {
-		var socket = io.connect("http://localhost:3132");
+		var socket = io.connect("/info");
 		return {
 			on: function (eventName, callback) {
 				socket.on(eventName, function () {

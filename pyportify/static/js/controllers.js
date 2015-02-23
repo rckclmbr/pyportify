@@ -74,7 +74,7 @@ function ProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $routeP
 			$scope.currentPlaylist.processed++;
 			$scope.currentPlaylist.found++;
 		} else if(data.type == "not_added") {
-			$scope.notfound.push(data.data.track);
+			$scope.notfound.push(data.data.spotify_track_name);
 			$scope.currentPlaylist.processed++;
 			$scope.currentPlaylist.notfound++;
 			if(data.data.karaoke) {
@@ -119,14 +119,14 @@ function FancyProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $r
 	});
 
 	socket.on('gmusic', function (data) {
-		var myidx = findIndexByKeyValue($scope.tracks, "id", data.data.spotify_uri );
+		var myidx = findIndexByKeyValue($scope.tracks, "id", data.data.spotify_track_uri );
 		if(data.type == "found_possible_matches") {
 
 			if(data.data.found) {
-				//$scope.tracks[data.data.spotify_uri].class.push('color');
+				//$scope.tracks[data.data.spotify_track_uri].class.push('color');
 				$scope.tracks[myidx].class.push('color');
 			} else {
-				//$scope.tracks[data.data.spotify_uri].nok = true;
+				//$scope.tracks[data.data.spotify_track_uri].nok = true;
 				$scope.tracks[myidx].nok = true;
 			}
 		} else if(data.type == "added") {
@@ -146,7 +146,7 @@ function FancyProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $r
 	});
 }
 
-function GoogleLoginCtrl($scope, $rootScope, $http, $location) {
+function GoogleLoginCtrl($scope, $rootScope, $http, $location, socket) {
 	$rootScope.step = 1;
 	$rootScope.link = '';
 	$scope.googleLogin = function() {
@@ -168,6 +168,9 @@ function GoogleLoginCtrl($scope, $rootScope, $http, $location) {
 			$scope.error = error;
 		});
 	};
+	socket.on('test', function (data) {
+        console.log(data);
+	});
 }
 
 function SpotifyLoginCtrl($scope, $rootScope, $http, $location) {

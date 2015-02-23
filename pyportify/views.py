@@ -1,11 +1,19 @@
 import os
 import threading
 
-from flask import Flask, jsonify, send_from_directory, request
+from gevent import monkey
+
+from flask import Flask, Response, jsonify, send_from_directory, request
+from socketio import socketio_manage
+from socketio.namespace import BaseNamespace
 from gmusicapi import Mobileclient
 import spotify
 
+monkey.patch_all()
+
 app = Flask(__name__)
+app.config['PORT'] = 3132
+# app.config['DEBUG'] = True
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
@@ -152,6 +160,7 @@ def spotify_playlists():
 @app.route("/", defaults={'path': 'index.html'})
 @app.route("/<path:path>")
 def base(path):
+    emit("test", {"type": "playlist_length"})
     return send_from_directory(STATIC_ROOT, path)
 
 
@@ -170,6 +179,17 @@ def transfer_playlists(playlists):
         print "Gathering tracks for playlist %s" % playlist_name_ascii
 
         track_count = len(sp_playlist.tracks)
+        playlist_json = {
+            "playlist": {
+                "uri": d_list["uri"],
+                "name": sp_playlist.name,
+            },
+            "name": sp_playlist.name,
+        }
+        emit("portify", {"type": "playlist_length",
+                         "data": {"length": track_count}})
+        emit("portify", {"type": "playlist_started",
+                         "data": playlist_json})
         for i, sp_track in enumerate(sp_playlist.tracks):
             sp_track.load()
             if sp_track.artists:
@@ -186,9 +206,27 @@ def transfer_playlists(playlists):
                 gm_track_ids.append(gm_track_id)
                 print "(%s/%s) Found '%s' in Google Music" \
                       % (i+1, track_count, search_query_ascii)
+                emit("gmusic", {
+                    "type": "added",
+                    "data": {
+                        "spotify_track_uri": d_list["uri"],
+                        "spotify_track_name": sp_track.name,
+                        "found": True,
+                        "karaoke": False,
+                    }
+                })
             else:
                 print "(%s/%s) No match found for '%s'" \
                       % (i+1, track_count, search_query_ascii)
+                emit("gmusic", {
+                    "type": "not_added",
+                    "data": {
+                        "spotify_track_uri": d_list["uri"],
+                        "spotify_track_name": sp_track.name,
+                        "found": False,
+                        "karaoke": False,
+                    }
+                })
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
@@ -196,8 +234,48 @@ def transfer_playlists(playlists):
             playlist_id = g.create_playlist(sp_playlist.name)
             g.add_songs_to_playlist(playlist_id, gm_track_ids)
             print "Done"
+        emit("portify", {"type": "playlist_ended",
+                         "data": playlist_json})
+    emit("portify", {"type": "all_done", "data": None})
+
+
+sns = None
+
+
+class GlobalNamespace(BaseNamespace):
+
+    def initialize(self):
+        self.logger = app.logger
+        self.log("Socketio session started")
+
+    def log(self, message):
+        print message
+        self.logger.info("[{0}] {1}".format(self.socket.sessid, message))
+
+    def recv_connect(self):
+        self.log("New connection")
+        global sns
+        sns = self
+
+    def recv_disconnect(self):
+        self.log("Client disconnected")
+
+
+def emit(*args, **kwargs):
+    if sns is not None:
+        sns.emit(*args, **kwargs)
+
+
+@app.route('/socket.io/<path:remaining>')
+def socketio(remaining):
+    try:
+        print "Managing socket.io"
+        socketio_manage(request.environ, {'/info': GlobalNamespace}, request)
+    except:
+        app.logger.error("Exception while handling socketio connection",
+                         exc_info=True)
+    return Response()
 
 
 if __name__ == "__main__":
-    app.debug = True
     app.run()
