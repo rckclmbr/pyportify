@@ -28,9 +28,7 @@ def main():
         print "Invalid Spotify username/password"
         sys.exit(1)
 
-    playlists = app.spotify_playlists(None)
-    playlists = json.loads(playlists.content)["data"]
-
+    playlists = app.fetch_spotify_playlists()
     app.transfer_playlists(playlists)
 
 

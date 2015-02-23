@@ -134,7 +134,11 @@ def transfer_start():
 
 @app.route("/spotify/playlists")
 def spotify_playlists():
+    ret_playlists = fetch_spotify_playlists()
+    return jsonify({"status": 200, "message": "ok", "data": ret_playlists})
 
+
+def fetch_spotify_playlists():
     container = user_scope.spotify_session.playlist_container
     playlists = container.load()
 
@@ -153,8 +157,7 @@ def spotify_playlists():
             "uri": playlist.link.uri,
         }
         ret_playlists.append(plist)
-
-    return jsonify({"status": 200, "message": "ok", "data": ret_playlists})
+    return ret_playlists
 
 
 @app.route("/", defaults={'path': 'index.html'})
