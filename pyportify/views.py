@@ -1,4 +1,3 @@
-import json
 import os
 import threading
 
@@ -65,7 +64,7 @@ user_scope = UserScope()
 user_scope.start()
 
 
-@app.route("/google/login", methods=["POST",])
+@app.route("/google/login", methods=["POST", ])
 def google_login():
 
     data = request.get_json()
@@ -86,7 +85,7 @@ def google_login():
     ))
 
 
-@app.route("/spotify/login", methods=["POST",])
+@app.route("/spotify/login", methods=["POST", ])
 def spotify_login():
 
     data = request.get_json()
@@ -118,7 +117,8 @@ def transfer_start():
         return jsonify({"status": 402, "message": "Spotify: not logged in."})
 
     if not lists:
-        return jsonify({"status": 403, "message": "Please select at least one playlist."})
+        return jsonify({"status": 403,
+                        "message": "Please select at least one playlist."})
 
     transfer_playlists(lists)
     return jsonify({"status": 200, "message": "transfer will start."})
@@ -184,9 +184,11 @@ def transfer_playlists(playlists):
             if songs:
                 gm_track_id = songs[0]["track"]["nid"]
                 gm_track_ids.append(gm_track_id)
-                print "(%s/%s) Found '%s' in Google Music" % (i+1, track_count, search_query_ascii)
+                print "(%s/%s) Found '%s' in Google Music" \
+                      % (i+1, track_count, search_query_ascii)
             else:
-                print "(%s/%s) No match found for '%s'" % (i+1, track_count, search_query_ascii)
+                print "(%s/%s) No match found for '%s'" \
+                      % (i+1, track_count, search_query_ascii)
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
