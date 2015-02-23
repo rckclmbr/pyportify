@@ -7,9 +7,8 @@ install:
   - "sudo apt-get update"
   - "sudo apt-get install python-all-dev libffi-dev libspotify-dev pandoc"
   - "pandoc -f markdown -t rst -o README.rst README.md"
-  - "pip install -r requirements.txt"
-  - "pip install ."
-script: ./manage.py test
+  - "pip install tox"
+script: tox
 deploy:
   provider: pypi
   user: jbraegger

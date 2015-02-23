@@ -20,15 +20,10 @@ class UserScope(object):
 
         config = spotify.Config()
         config.cache_location = "tmp"
-        print "TEST1"
         config.load_application_key_file(SPOTIFY_APPKEY)
-        print "TEST2"
         self.spotify_session = spotify.Session(config)
-        print "TEST3"
         self.loop = spotify.EventLoop(self.spotify_session)
-        print "TEST4"
         self.logged_in_event = threading.Event()
-        print "TEST5"
         self._google_loggedin = False
 
     def _logged_in_listener(self, session, error_type):

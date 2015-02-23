@@ -1,5 +1,5 @@
 cherrypy
-flask
-pyspotify==2.0.0b3
-gmusicapi==4.0.0
+flask>=0.10.1
+pyspotify>=2.0.0b3
+gmusicapi>=4.0.0
 six>=1.6.1
