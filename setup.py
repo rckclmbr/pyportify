@@ -3,13 +3,14 @@
 from distutils.core import setup
 from setuptools import find_packages
 import os
+import re
 
-import pyportify
-import pyportify.views
-try:
-    import py2exe
-except:
-    pass
+#import pyportify
+#import pyportify.views
+#try:
+#    import py2exe
+#except:
+#    pass
 
 basepath = os.path.dirname(__file__)
 readme_rst = os.path.join(basepath, "README.rst")
@@ -24,9 +25,17 @@ with open(requirements_txt) as reqs:
                                                      line.startswith('--'))
     ]
 
+
+def get_version(filename):
+    with open(filename) as r:
+        metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", r.read()))
+        print metadata
+        return metadata['version']
+
+
 setup(
     name='pyportify',
-    version=pyportify.__version__,
+    version=get_version("pyportify/__init__.py"),
     author='Josh Braegger',
     author_email='rckclmbr@gmail.com',
     packages=find_packages(),
