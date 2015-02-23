@@ -7,9 +7,11 @@ import re
 
 try:
     import py2exe
+    has_py2exe = True
 except:
-    pass
-else:
+    has_py2exe = False
+
+if has_py2exe:
     import pyportify
     import pyportify.views
 
@@ -34,7 +36,7 @@ def get_version(filename):
         return metadata['version']
 
 
-setup(
+args = dict(
     name='pyportify',
     version=get_version("pyportify/__init__.py"),
     author='Josh Braegger',
@@ -50,9 +52,6 @@ setup(
         'Environment :: Web Environment',
         'Framework :: Flask',
     ],
-    console=[
-        "pyportify/server.py",
-    ],
     entry_points={
         'console_scripts': [
             'pyportify = pyportify.server:main',
@@ -67,3 +66,8 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
 )
+
+if has_py2exe:
+    args["console"] = "pyportify/server.py"
+
+setup(**args)
