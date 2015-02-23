@@ -2,6 +2,7 @@ tmp
 *.swp
 *.pyc
 .idea
+.tox
 build
 dist
 pyportify.egg-info
