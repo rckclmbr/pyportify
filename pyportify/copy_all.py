@@ -1,5 +1,4 @@
 from getpass import getpass
-import json
 import sys
 
 from pyportify import views as app
