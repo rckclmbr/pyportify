@@ -5,12 +5,13 @@ from setuptools import find_packages
 import os
 import re
 
-#import pyportify
-#import pyportify.views
-#try:
-#    import py2exe
-#except:
-#    pass
+try:
+    import py2exe
+except:
+    pass
+else:
+    import pyportify
+    import pyportify.views
 
 basepath = os.path.dirname(__file__)
 readme_rst = os.path.join(basepath, "README.rst")
