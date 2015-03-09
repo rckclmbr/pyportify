@@ -184,7 +184,8 @@ def transfer_playlists(playlists):
 
         playlist_name_ascii = sp_playlist.name.encode('utf8', 'replace')
         track_count = len(sp_playlist.tracks)
-        print "Gathering tracks for playlist %s (%s)" % (playlist_name_ascii, track_count)
+        print "Gathering tracks for playlist %s (%s)" \
+            % (playlist_name_ascii, track_count)
         playlist_json = {
             "playlist": {
                 "uri": d_list["uri"],
@@ -198,6 +199,7 @@ def transfer_playlists(playlists):
                          "data": playlist_json})
 
         gm_track_ids = [None] * len(sp_playlist.tracks)
+
         def search_gm_track(args):
             i, spotify_uri, search_query = args
             track = g.find_best_track(search_query)
@@ -240,7 +242,8 @@ def transfer_playlists(playlists):
             search_query_ascii = search_query.encode("utf-8", "replace")
             queries.append((i, d_list["uri"], search_query_ascii))
 
-        gevent.joinall([gevent.spawn(search_gm_track, query) for query in queries])
+        gevent.joinall([gevent.spawn(search_gm_track, query)
+                       for query in queries])
         gm_track_ids = [i for i in gm_track_ids if i is not None]
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:

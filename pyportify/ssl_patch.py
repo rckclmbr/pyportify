@@ -8,7 +8,10 @@ except AttributeError:
     _ssl = __ssl__._ssl2
 
 
-def new_sslwrap(sock, server_side=False, keyfile=None, certfile=None, cert_reqs=__ssl__.CERT_NONE, ssl_version=__ssl__.PROTOCOL_SSLv23, ca_certs=None, ciphers=None):
+def new_sslwrap(sock, server_side=False, keyfile=None, certfile=None,
+                cert_reqs=__ssl__.CERT_NONE,
+                ssl_version=__ssl__.PROTOCOL_SSLv23, ca_certs=None,
+                ciphers=None):
     context = __ssl__.SSLContext(ssl_version)
     context.verify_mode = cert_reqs or __ssl__.CERT_NONE
     if ca_certs:
@@ -19,7 +22,9 @@ def new_sslwrap(sock, server_side=False, keyfile=None, certfile=None, cert_reqs=
         context.set_ciphers(ciphers)
 
     caller_self = inspect.currentframe().f_back.f_locals['self']
-    return context._wrap_socket(sock, server_side=server_side, ssl_sock=caller_self)
+    return context._wrap_socket(sock, server_side=server_side,
+                                ssl_sock=caller_self)
+
 
 def patch():
     if not hasattr(_ssl, 'sslwrap'):

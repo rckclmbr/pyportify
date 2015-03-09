@@ -21,16 +21,18 @@ class Mobileclient(object):
 
     def __init__(self):
         self._auth = None
-        self._sj_client = HTTPClient.from_url("https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-                                              headers_type=dict,
-                                              concurrency=20,
-                                              network_timeout=15,
-                                              )
-        self._pl_client = HTTPClient.from_url("https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-                                              headers_type=dict,
-                                              concurrency=1,
-                                              network_timeout=120,
-                                              )
+        self._sj_client = HTTPClient.from_url(
+            "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
+            headers_type=dict,
+            concurrency=20,
+            network_timeout=15,
+            )
+        self._pl_client = HTTPClient.from_url(
+            "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
+            headers_type=dict,
+            concurrency=1,
+            network_timeout=120,
+            )
         self._login_client = HTTPClient.from_url(LOGINURL, concurrency=1)
 
     def login(self, username, password):
@@ -43,7 +45,8 @@ class Mobileclient(object):
         })
         headers = {"Content-type": "application/x-www-form-urlencoded",
                    "Accept": "text/plain"}
-        res = self._login_client.post("/accounts/ClientLogin", post_data, headers)
+        res = self._login_client.post("/accounts/ClientLogin", post_data,
+                                      headers)
 
         if res.status_code == 403:
             return False
@@ -107,7 +110,6 @@ class Mobileclient(object):
         return data
 
 
-
 def build_add_tracks(playlist_id, track_ids):
     mutations = []
     prev_id = ""
@@ -154,7 +156,8 @@ def build_create_playlist(name, public):
             "type": "USER_GENERATED",
             "accessControlled": public,
         }
-    },]
+    }]
+
 
 def parse_auth_response(s):
     # SID=DQAAAGgA...7Zg8CTN
@@ -164,6 +167,6 @@ def parse_auth_response(s):
     for line in s.split("\n"):
         if not line:
             continue
-        k, v  = line.split("=", 1)
+        k, v = line.split("=", 1)
         res[k] = v
     return res
