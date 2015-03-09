@@ -1,15 +1,20 @@
 import os
+import sys
 import threading
 
+import gevent
 from gevent import monkey
+monkey.patch_all()
 
 from flask import Flask, Response, jsonify, send_from_directory, request
 from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
-from gmusicapi import Mobileclient
+from .google import Mobileclient
 import spotify
 
-monkey.patch_all()
+# Holy messed up ssl batman
+import ssl_patch
+ssl_patch.patch()
 
 app = Flask(__name__)
 app.config['PORT'] = 3132
@@ -176,12 +181,10 @@ def transfer_playlists(playlists):
             sp_playlist.name = 'Starred Tracks'
         else:
             sp_playlist = s.get_playlist(d_list["uri"])
-        gm_track_ids = []
 
         playlist_name_ascii = sp_playlist.name.encode('utf8', 'replace')
-        print "Gathering tracks for playlist %s" % playlist_name_ascii
-
         track_count = len(sp_playlist.tracks)
+        print "Gathering tracks for playlist %s (%s)" % (playlist_name_ascii, track_count)
         playlist_json = {
             "playlist": {
                 "uri": d_list["uri"],
@@ -193,27 +196,21 @@ def transfer_playlists(playlists):
                          "data": {"length": track_count}})
         emit("portify", {"type": "playlist_started",
                          "data": playlist_json})
-        for i, sp_track in enumerate(sp_playlist.tracks):
-            sp_track.load()
-            if sp_track.artists:
-                sp_artist = sp_track.artists[0]
-            else:
-                sp_artist = None
 
-            search_query = "%s - %s" % (sp_artist.name, sp_track.name)
-            search_query_ascii = search_query.encode("utf-8", "replace")
-            search_results = g.search_all_access(search_query, max_results=1)
-            songs = search_results.get("song_hits")
-            if songs:
-                gm_track_id = songs[0]["track"]["nid"]
-                gm_track_ids.append(gm_track_id)
+        gm_track_ids = [None] * len(sp_playlist.tracks)
+        def search_gm_track(args):
+            i, spotify_uri, search_query = args
+            track = g.find_best_track(search_query)
+            if track:
+                gm_track_id = track["nid"]
+                gm_track_ids[i] = gm_track_id
                 print "(%s/%s) Found '%s' in Google Music" \
-                      % (i+1, track_count, search_query_ascii)
+                      % (i+1, track_count, search_query)
                 emit("gmusic", {
                     "type": "added",
                     "data": {
-                        "spotify_track_uri": d_list["uri"],
-                        "spotify_track_name": sp_track.name,
+                        "spotify_track_uri": spotify_uri,
+                        "spotify_track_name": search_query,
                         "found": True,
                         "karaoke": False,
                     }
@@ -224,16 +221,31 @@ def transfer_playlists(playlists):
                 emit("gmusic", {
                     "type": "not_added",
                     "data": {
-                        "spotify_track_uri": d_list["uri"],
-                        "spotify_track_name": sp_track.name,
+                        "spotify_track_uri": spotify_uri,
+                        "spotify_track_name": search_query,
                         "found": False,
                         "karaoke": False,
                     }
                 })
 
+        queries = []
+        for i, sp_track in enumerate(sp_playlist.tracks):
+            sp_track.load()
+            if sp_track.artists:
+                sp_artist = sp_track.artists[0]
+            else:
+                sp_artist = None
+
+            search_query = "%s - %s" % (sp_artist.name, sp_track.name)
+            search_query_ascii = search_query.encode("utf-8", "replace")
+            queries.append((i, d_list["uri"], search_query_ascii))
+
+        gevent.joinall([gevent.spawn(search_gm_track, query) for query in queries])
+        gm_track_ids = [i for i in gm_track_ids if i is not None]
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
             print "Creating in Google Music... ",
+            sys.stdout.flush()
             playlist_id = g.create_playlist(sp_playlist.name)
             g.add_songs_to_playlist(playlist_id, gm_track_ids)
             print "Done"
