@@ -74,7 +74,7 @@ function ProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $routeP
 			$scope.currentPlaylist.processed++;
 			$scope.currentPlaylist.found++;
 		} else if(data.type == "not_added") {
-			$scope.notfound.push(data.data.spotify_track_name);
+			$scope.notfound.push({"name": data.data.spotify_track_name});
 			$scope.currentPlaylist.processed++;
 			$scope.currentPlaylist.notfound++;
 			if(data.data.karaoke) {
