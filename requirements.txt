@@ -5,3 +5,4 @@ pyspotify>=2.0.0b4
 six>=1.6.1
 gevent>=1.0.1
 geventhttpclient>=1.1.0
+itsdangerous>=0.24
