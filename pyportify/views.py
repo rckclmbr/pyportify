@@ -168,7 +168,6 @@ def fetch_spotify_playlists():
 @app.route("/", defaults={'path': 'index.html'})
 @app.route("/<path:path>")
 def base(path):
-    raise Exception("Can i see it?")
     emit("test", {"type": "playlist_length"})
     return send_from_directory(STATIC_ROOT, path)
 
