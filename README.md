@@ -1,6 +1,8 @@
 Pyportify
 =========
 
+[![Build Status](https://travis-ci.org/rckclmbr/pyportify.svg?branch=master)](https://travis-ci.org/rckclmbr/pyportify)
+
 A port of [portify](https://github.com/mauimauer/portify) to python.
 
 But it actually works.
