@@ -156,7 +156,7 @@ def fetch_spotify_playlists():
     for playlist in playlists:
         if isinstance(playlist, spotify.PlaylistFolder):
             continue
-        playlist.load()
+        playlist.load(timeout=300)
         plist = {
             "name": playlist.name,
             "uri": playlist.link.uri,
@@ -168,6 +168,7 @@ def fetch_spotify_playlists():
 @app.route("/", defaults={'path': 'index.html'})
 @app.route("/<path:path>")
 def base(path):
+    raise Exception("Can i see it?")
     emit("test", {"type": "playlist_length"})
     return send_from_directory(STATIC_ROOT, path)
 
@@ -178,7 +179,7 @@ def transfer_playlists(playlists):
     for d_list in playlists:
         if ":starred" in d_list["uri"]:
             sp_playlist = s.get_starred()
-            sp_playlist.name = 'Starred Tracks'
+            sp_playlist.name = u'Starred Tracks'
         else:
             sp_playlist = s.get_playlist(d_list["uri"])
 
@@ -219,7 +220,7 @@ def transfer_playlists(playlists):
                 })
             else:
                 print "(%s/%s) No match found for '%s'" \
-                      % (i+1, track_count, search_query_ascii)
+                      % (i+1, track_count, search_query)
                 emit("gmusic", {
                     "type": "not_added",
                     "data": {
@@ -232,13 +233,30 @@ def transfer_playlists(playlists):
 
         queries = []
         for i, sp_track in enumerate(sp_playlist.tracks):
-            sp_track.load()
+            try:
+                sp_track.load(timeout=300)
+            except:
+                print "(%s/%s) Error loading track in spotify" \
+                      % (i+1, track_count)
+                emit("gmusic", {
+                    "type": "not_added",
+                    "data": {
+                        "spotify_track_uri": d_list["uri"],
+                        "spotify_track_name": "<unknown>",
+                        "found": False,
+                        "karaoke": False,
+                    }
+                })
+                continue
             if sp_track.artists:
                 sp_artist = sp_track.artists[0]
             else:
                 sp_artist = None
 
-            search_query = "%s - %s" % (sp_artist.name, sp_track.name)
+            if sp_artist:
+                search_query = "%s - %s" % (sp_artist.name, sp_track.name)
+            else:
+                search_query = "%s" % (sp_track.name)
             search_query_ascii = search_query.encode("utf-8", "replace")
             queries.append((i, d_list["uri"], search_query_ascii))
 
