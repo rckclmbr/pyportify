@@ -156,6 +156,8 @@ def fetch_spotify_playlists():
     for playlist in playlists:
         if isinstance(playlist, spotify.PlaylistFolder):
             continue
+        if isinstance(playlist, spotify.PlaylistPlaceholder):
+            continue
         playlist.load(timeout=300)
         plist = {
             "name": playlist.name,
