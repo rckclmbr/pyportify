@@ -1,4 +1,5 @@
 from geventhttpclient import HTTPClient
+import gpsoauth
 import urllib
 import json
 import uuid
@@ -33,30 +34,23 @@ class Mobileclient(object):
             concurrency=1,
             network_timeout=120,
             )
-        self._login_client = HTTPClient.from_url(LOGINURL, concurrency=1)
 
     def login(self, username, password):
-        post_data = encode({
-            "Email": username,
-            "Passwd": password,
-            "accountType": "HOSTED_OR_GOOGLE",
-            "source": "pyportify",
-            "service": "sj",
-        })
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-                   "Accept": "text/plain"}
-        res = self._login_client.post("/accounts/ClientLogin", post_data,
-                                      headers)
+        android_id = "asdkfjaj"
+        res = gpsoauth.perform_master_login(username, password, android_id)
 
-        if res.status_code == 403:
+        if "Token" not in res:
             return False
 
-        data = res.read()
-        auth = parse_auth_response(data).get("Auth", None)
-        if not auth:
+        self._master_token = res['Token']
+        res = gpsoauth.perform_oauth(
+            username, self._master_token, android_id,
+            service='sj', app='com.google.android.music',
+            client_sig='38918a453d07199354f8b19af05ec6562ced5788')
+        if 'Auth' not in res:
             return False
-
-        self._auth = auth
+        self._auth = res["Auth"]
+        self.is_authenticated = True
         return True
 
     def search_all_access(self, search_query, max_results=1):
