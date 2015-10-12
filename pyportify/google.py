@@ -24,13 +24,11 @@ class Mobileclient(object):
         self._auth = None
         self._sj_client = HTTPClient.from_url(
             "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-            headers_type=dict,
             concurrency=20,
             network_timeout=15,
             )
         self._pl_client = HTTPClient.from_url(
             "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-            headers_type=dict,
             concurrency=1,
             network_timeout=120,
             )
@@ -87,7 +85,7 @@ class Mobileclient(object):
             "Authorization": "GoogleLogin auth={0}".format(self._auth),
             "Content-type": "application/json",
         }
-        res = self._sj_client.get(SJ_URL + url, headers)
+        res = self._sj_client.request('GET', SJ_URL + url, headers=headers)
         body = res.read()
         data = json.loads(body)
         return data
@@ -98,7 +96,7 @@ class Mobileclient(object):
             "Authorization": "GoogleLogin auth={0}".format(self._auth),
             "Content-type": "application/json",
         }
-        res = self._pl_client.post(SJ_URL + url, data, headers)
+        res = self._pl_client.post('POST', SJ_URL + url, body=data, headers=headers)
         body = res.read()
         data = json.loads(body)
         return data
