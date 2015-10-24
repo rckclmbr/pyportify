@@ -3,6 +3,7 @@ Flask-SocketIO>=0.5.0
 gunicorn==0.16.1
 pyspotify>=2.0.0b5
 six>=1.6.1
-gevent>=1.0.2
-geventhttpclient>=1.1.0
+gevent==1.0.2
+geventhttpclient==1.2.0
 gpsoauth==0.0.1
+certifi

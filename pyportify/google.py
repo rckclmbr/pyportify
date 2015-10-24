@@ -1,3 +1,4 @@
+import certifi
 from geventhttpclient import HTTPClient
 import gpsoauth
 import urllib
@@ -26,12 +27,16 @@ class Mobileclient(object):
             "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
             concurrency=20,
             network_timeout=15,
-            )
+            ssl_options={
+                "ca_certs": certifi.where(),
+            })
         self._pl_client = HTTPClient.from_url(
             "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
             concurrency=1,
             network_timeout=120,
-            )
+            ssl_options={
+                "ca_certs": certifi.where(),
+            })
 
     def login(self, username, password):
         android_id = "asdkfjaj"
@@ -85,7 +90,7 @@ class Mobileclient(object):
             "Authorization": "GoogleLogin auth={0}".format(self._auth),
             "Content-type": "application/json",
         }
-        res = self._sj_client.request('GET',
+        res = self._sj_client.get(
             SJ_URL + url,
             headers=headers
         )
@@ -99,7 +104,7 @@ class Mobileclient(object):
             "Authorization": "GoogleLogin auth={0}".format(self._auth),
             "Content-type": "application/json",
         }
-        res = self._pl_client.post('POST',
+        res = self._pl_client.post(
             SJ_URL + url,
             body=data,
             headers=headers
