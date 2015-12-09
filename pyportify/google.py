@@ -6,8 +6,7 @@ import json
 import uuid
 
 SJ_DOMAIN = "mclients.googleapis.com"
-SJ_URL = "/sj/v1.10"
-LOGINURL = "https://www.google.com/accounts/ClientLogin"
+SJ_URL = "/sj/v1.11"
 
 
 def encode(values):

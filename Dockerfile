@@ -1,9 +1,9 @@
-FROM ubuntu:14.04
+FROM ubuntu:15.04
 
 MAINTAINER Josh Braegger <rckclmbr@gmail.com>
 
 RUN apt-get update && apt-get install -y curl
-RUN curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -; \
+RUN curl -s https://apt.mopidy.com/mopidy.gpg | apt-key add -; \
     curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list; \
     apt-get update
 

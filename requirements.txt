@@ -6,5 +6,5 @@ six>=1.6.1
 gevent==1.0.2
 geventhttpclient==1.2.0
 gevent-socketio==0.3.6
-gpsoauth==0.0.1
+gpsoauth==0.0.5
 certifi
