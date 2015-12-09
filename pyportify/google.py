@@ -27,14 +27,14 @@ class Mobileclient(object):
             concurrency=20,
             network_timeout=15,
             ssl_options={
-                "ca_certs": certifi.where(),
+                "ca_certs": certifi.old_where(),
             })
         self._pl_client = HTTPClient.from_url(
             "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
             concurrency=1,
             network_timeout=120,
             ssl_options={
-                "ca_certs": certifi.where(),
+                "ca_certs": certifi.old_where(),
             })
 
     def login(self, username, password):
