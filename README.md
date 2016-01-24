@@ -33,7 +33,7 @@ $ ln -s /usr/local/opt/libspotify/lib/libspotify.12.1.51.dylib \
 $ pip install pyportify
 ```
 
-Ubuntu:
+Debian and derivatives, like Ubuntu:
 
 ```bash
 curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -
