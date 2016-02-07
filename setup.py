@@ -44,7 +44,7 @@ args = dict(
     ],
     entry_points={
         'console_scripts': [
-            'pyportify = pyportify.views:main',
+            'pyportify = pyportify.server:main',
             'pyportify-copyall = pyportify.copy_all:main',
         ],
     },
