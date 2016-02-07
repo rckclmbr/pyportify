@@ -3,6 +3,7 @@
 import asyncio
 from pyportify import app
 
+
 def main():
     loop = asyncio.get_event_loop()
     handler = loop.run_until_complete(app.setup(loop))

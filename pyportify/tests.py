@@ -1,5 +1,5 @@
 import unittest
-from pyportify import pp
+from pyportify import app
 
 
 class UserScopeTest(unittest.TestCase):
