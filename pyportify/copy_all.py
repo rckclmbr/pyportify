@@ -24,7 +24,7 @@ OAUTH_URL = \
 
 
 @asyncio.coroutine
-def main():
+def start():
 
     sslcontext = ssl.create_default_context(cafile=certifi.where())
     conn = aiohttp.TCPConnector(ssl_context=sslcontext)
@@ -55,9 +55,12 @@ def main():
         yield from app.transfer_playlists(None, session, s, g, playlists)
 
 
-if __name__ == '__main__':
+def main():
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main())
+        loop.run_until_complete(start())
     finally:
         loop.close()
+
+if __name__ == '__main__':
+    main()
