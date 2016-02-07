@@ -1,11 +1,11 @@
 import unittest
-from pyportify import views
+from pyportify import pp
 
 
 class UserScopeTest(unittest.TestCase):
 
     def test_user_scope(self):
-        scope = views.user_scope
+        scope = app.user_scope
 
-        assert not scope.google_loggedin()
-        assert not scope.spotify_loggedin()
+        assert not scope.google_token
+        assert not scope.spotify_token

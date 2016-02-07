@@ -20,35 +20,25 @@ If you are unable to sign in to your Google account, turn on access for less sec
 Install
 -------
 
-OS X:
+OS X / Debian and :
 
 ```bash
-# Install libspotify
-$ brew install homebrew/binary/libspotify
-$ brew install libffi
-# Workaround on OSX (see https://pyspotify.mopidy.com/en/latest/installation/)
-$ ln -s /usr/local/opt/libspotify/lib/libspotify.12.1.51.dylib \
-/usr/local/opt/libspotify/lib/libspotify
-# Install pyportify
-$ pip install pyportify
+$ brew install python3
+$ pip3 install pyportify
 ```
 
 Ubuntu:
 
 ```bash
-curl -s https://apt.mopidy.com/mopidy.gpg | sudo apt-key add -
-sudo sh -c 'curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list'
 sudo apt-get update
-sudo apt-get install -y python-pip python-dev libffi-dev libspotify-dev
-sudo pip install pyportify
+sudo apt-get install -y python-pip3
+sudo pip3 install pyportify
 ```
 
 Fedora 
 
 ```bash
-yum -y localinstall --nogpgcheck http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 sudo yum check-update
-sudo yum -y install gcc python-pip python-devel libffi-devel libspotify-devel
 sudo pip install pyportify
 ```
 

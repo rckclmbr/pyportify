@@ -29,7 +29,7 @@ angular.module('portify', []).
 			}
 		}).success(function(response){
 				if(response.status == 200) {
-					console.log("initated transfer...");
+					console.log("initiated transfer...");
 				} else {
 					if(response.status == 401)
 						$location.path( "/google/login" );
@@ -69,25 +69,30 @@ angular.module('portify', []).
 		return context;
 	}).
 	factory('socket', function ($rootScope) {
-		var socket = io.connect("/info");
+        var socket = new WebSocket('ws://'+window.location.host+'/ws/');
+        var callbacks = {};
+        socket.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            var currentCallbacks = callbacks[data['eventName']];
+            for (var i = 0; i < currentCallbacks.length; i++) {
+                var callback = currentCallbacks[i];
+                var args = arguments;
+                $rootScope.$apply(function () {
+                    callback.apply(socket, args);
+                });
+            }
+        };
 		return {
 			on: function (eventName, callback) {
-				socket.on(eventName, function () {
-					var args = arguments;
-					$rootScope.$apply(function () {
-						callback.apply(socket, args);
-					});
-				});
+                if (!callbacks[eventName]) {
+                    callbacks[eventName] = [];
+                }
+                callbacks[eventName].push(callback);
 			},
 			emit: function (eventName, data, callback) {
-				socket.emit(eventName, data, function () {
-					var args = arguments;
-					$rootScope.$apply(function () {
-						if (callback) {
-							callback.apply(socket, args);
-						}
-					});
-				})
+                var data = {'eventName': eventName, 'eventData': data};
+                data = JSON.stringify(data);
+				socket.send(data);
 			}
 		};
 	}).

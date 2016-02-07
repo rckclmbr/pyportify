@@ -45,6 +45,7 @@ function ProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $routeP
 	};
 
 	socket.on('portify', function (data) {
+        data = JSON.parse(data.data)['eventData']
 		if(data.type == "playlist_started") {
 			$scope.cover = null;
 			$scope.playlist = data.data.playlist.name;
@@ -70,6 +71,7 @@ function ProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $routeP
 	});
 
 	socket.on('gmusic', function (data) {
+        data = JSON.parse(data.data)['eventData']
 		if(data.type == "added") {
 			$scope.currentPlaylist.processed++;
 			$scope.currentPlaylist.found++;
@@ -109,6 +111,7 @@ function FancyProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $r
 	}
 
 	socket.on('portify', function (data) {
+        data = JSON.parse(data.data)['eventData']
 		if(data.type == "playlist_started") {
 			$scope.playlist = data.data.playlist.name;
 			$scope.status = "Transfering..."+$scope.playlist;
@@ -119,6 +122,7 @@ function FancyProcessTransferCtrl($scope, $rootScope, $filter, $http, $route, $r
 	});
 
 	socket.on('gmusic', function (data) {
+        data = JSON.parse(data.data)['eventData']
 		var myidx = findIndexByKeyValue($scope.tracks, "id", data.data.spotify_track_uri );
 		if(data.type == "found_possible_matches") {
 

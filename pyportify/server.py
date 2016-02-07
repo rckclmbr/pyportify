@@ -1,29 +1,16 @@
-#!/usr/bin/env python
-import logging
-import sys
+#!/usr/bin/env python3
 
-from pyportify.views import app as application
-from gevent import monkey
-from socketio.server import SocketIOServer
-
-monkey.patch_all()
-
+import asyncio
+from pyportify import app
 
 def main():
-    print "Open your browser and go to http://localhost:3132"
+    loop = asyncio.get_event_loop()
+    handler = loop.run_until_complete(app.setup(loop))
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.run_until_complete(handler.finish_connections())
+        loop.close()
 
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    application.logger.addHandler(ch)
-
-    SocketIOServer(
-        ('', application.config['PORT']),
-        application,
-        resource="socket.io").serve_forever()
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

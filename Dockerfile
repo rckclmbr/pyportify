@@ -2,13 +2,9 @@ FROM ubuntu:15.04
 
 MAINTAINER Josh Braegger <rckclmbr@gmail.com>
 
-RUN apt-get update && apt-get install -y curl
-RUN curl -s https://apt.mopidy.com/mopidy.gpg | apt-key add -; \
-    curl -s https://apt.mopidy.com/mopidy.list > /etc/apt/sources.list.d/mopidy.list; \
-    apt-get update
-
-RUN apt-get install -y python-pip python-dev libffi-dev libspotify-dev
-RUN pip install virtualenv && virtualenv --system-site-packages /ve
+RUN apt-get update 
+RUN apt-get install -y python3 python3-pip git
+RUN pip3 install virtualenv && virtualenv -p python3 /ve
 
 ADD . /app/
 RUN touch /app/README.rst

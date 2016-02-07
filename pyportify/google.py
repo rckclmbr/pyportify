@@ -1,48 +1,33 @@
-import certifi
-from geventhttpclient import HTTPClient
-import gpsoauth
-import urllib
 import json
 import uuid
+import urllib
+
+import asyncio
+from pyportify import gpsoauth
 
 SJ_DOMAIN = "mclients.googleapis.com"
 SJ_URL = "/sj/v1.11"
 
+FULL_SJ_URL = "https://{0}{1}".format(SJ_DOMAIN, SJ_URL)
+
 
 def encode(values):
-    try:
-        for k, v in values.iteritems():
-            values[k] = unicode(v).encode("utf-8")
-    except Exception:
-        pass
-    return urllib.urlencode(values)
+    return urllib.parse.urlencode(values)
 
 
 class Mobileclient(object):
 
-    def __init__(self):
-        self._auth = None
-        self._sj_client = HTTPClient.from_url(
-            "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-            concurrency=20,
-            network_timeout=15,
-            ssl_options={
-                "ca_certs": certifi.old_where(),
-            })
-        self._pl_client = HTTPClient.from_url(
-            "https://{0}{1}".format(SJ_DOMAIN, SJ_URL),
-            concurrency=1,
-            network_timeout=120,
-            ssl_options={
-                "ca_certs": certifi.old_where(),
-            })
+    def __init__(self, session, token=None):
+        self.token = token
+        self.session = session
 
+    @asyncio.coroutine
     def login(self, username, password):
         android_id = "asdkfjaj"
         res = gpsoauth.perform_master_login(username, password, android_id)
 
         if "Token" not in res:
-            return False
+            return None
 
         self._master_token = res['Token']
         res = gpsoauth.perform_oauth(
@@ -50,20 +35,21 @@ class Mobileclient(object):
             service='sj', app='com.google.android.music',
             client_sig='38918a453d07199354f8b19af05ec6562ced5788')
         if 'Auth' not in res:
-            return False
-        self._auth = res["Auth"]
-        self.is_authenticated = True
-        return True
+            return None
+        self.token = res["Auth"]
+        return self.token
 
-    def search_all_access(self, search_query, max_results=1):
-        params = {"q": search_query, "max_items": max_results}
+    @asyncio.coroutine
+    def search_all_access(self, search_query, max_results=30):
+        params = {"q": search_query, "max_items": max_results, 'type': 1}
         query = encode(params)
         url = "/query?{0}".format(query)
-        data = self._http_get(url)
+        data = yield from self._http_get(url)
         return data
 
+    @asyncio.coroutine
     def find_best_track(self, search_query):
-        data = self.search_all_access(search_query)
+        data = yield from self.search_all_access(search_query)
         if "entries" not in data:
             return None
         for entry in data["entries"]:
@@ -71,46 +57,51 @@ class Mobileclient(object):
                 return entry["track"]
         return None
 
+    @asyncio.coroutine
     def create_playlist(self, name, public=False):
         mutations = build_create_playlist(name, public)
-        data = self._pl_http_post("/playlistbatch?alt=json", {
+        data = yield from self._http_post("/playlistbatch?alt=json", {
             "mutations": mutations,
         })
         return data["mutate_response"][0]["id"]  # playlist_id
 
+    @asyncio.coroutine
     def add_songs_to_playlist(self, playlist_id, track_ids):
         mutations = build_add_tracks(playlist_id, track_ids)
-        self._pl_http_post("/plentriesbatch?alt=json", {
+        yield from self._http_post("/plentriesbatch?alt=json", {
             "mutations": mutations,
         })
 
+    @asyncio.coroutine
     def _http_get(self, url):
         headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self._auth),
+            "Authorization": "GoogleLogin auth={0}".format(self.token),
             "Content-type": "application/json",
         }
-        res = self._sj_client.get(
-            SJ_URL + url,
+
+        res = yield from self.session.request(
+            'GET',
+            FULL_SJ_URL + url,
             headers=headers
         )
-        body = res.read()
-        data = json.loads(body)
+        data = yield from res.json()
         return data
 
-    def _pl_http_post(self, url, data):
+    @asyncio.coroutine
+    def _http_post(self, url, data):
         data = json.dumps(data)
         headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self._auth),
+            "Authorization": "GoogleLogin auth={0}".format(self.token),
             "Content-type": "application/json",
         }
-        res = self._pl_client.post(
-            SJ_URL + url,
-            body=data,
-            headers=headers
+        res = yield from self.session.request(
+            'POST',
+            FULL_SJ_URL + url,
+            data=data,
+            headers=headers,
         )
-        body = res.read()
-        data = json.loads(body)
-        return data
+        ret = yield from res.json()
+        return ret
 
 
 def build_add_tracks(playlist_id, track_ids):
