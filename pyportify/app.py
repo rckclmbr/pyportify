@@ -1,20 +1,23 @@
 
 import asyncio
 import json
+import ssl
+
+import aiohttp
+import certifi
 import os
 import sys
 
 from aiohttp import web, ClientSession
 from aiohttp.web import json_response
+from pyportify import dispatcher
 
 from pyportify.spotify import SpotifyClient, get_queries
 from pyportify.google import Mobileclient
-from pyportify.dispatcher import add_static
+from pyportify.util import uprint
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
-IS_BUNDLED = getattr(sys, 'frozen', False)
 
 
 class UserScope(object):
@@ -95,7 +98,10 @@ def transfer_start(request):
             "message": "Please select at least one playlist.",
         })
 
-    with ClientSession() as session:
+    sslcontext = ssl.create_default_context(cafile=certifi.where())
+    conn = aiohttp.TCPConnector(ssl_context=sslcontext)
+
+    with ClientSession(connector=conn) as session:
         g = Mobileclient(session, user_scope.google_token)
         s = SpotifyClient(session, user_scope.spotify_token)
 
@@ -125,7 +131,7 @@ def transfer_playlists(request, session, s, g, playlists):
         sp_playlist_tracks = yield from s.fetch_playlist_tracks(d_list["uri"])
 
         track_count = len(sp_playlist_tracks)
-        print(
+        uprint(
             "Gathering tracks for playlist %s (%s)" %
             (sp_playlist['name'], track_count)
         )
@@ -156,9 +162,10 @@ def transfer_playlists(request, session, s, g, playlists):
             if track:
                 gm_track_id = track["nid"]
                 gm_track_ids[i] = gm_track_id
-                print(
-                    "(%s/%s) Found '%s' in Google Music" %
-                    (i+1, track_count, search_query)
+                uprint(
+                    "({0}/{1}) Found '{2}' in Google Music".format(
+                        i+1, track_count, search_query
+                    )
                 )
                 yield from emit(request, "gmusic", {
                     "type": "added",
@@ -170,7 +177,7 @@ def transfer_playlists(request, session, s, g, playlists):
                     }
                 })
             else:
-                print(
+                uprint(
                     "({0}/{1}) No match found for '{2}'"
                     .format(i+1, track_count, search_query)
                 )
@@ -193,11 +200,11 @@ def transfer_playlists(request, session, s, g, playlists):
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
-            print("Creating in Google Music... ", end='')
+            uprint("Creating in Google Music... ", end='')
             sys.stdout.flush()
             playlist_id = yield from g.create_playlist(sp_playlist['name'])
             yield from g.add_songs_to_playlist(playlist_id, gm_track_ids)
-            print("Done")
+            uprint("Done")
         yield from emit(
             request,
             "portify",
@@ -209,7 +216,7 @@ def transfer_playlists(request, session, s, g, playlists):
 @asyncio.coroutine
 def emit(request, event, data):
     if request is None:
-        print("Not emitting {0}".format(event))
+        uprint("Not emitting {0}".format(event))
         return
 
     for ws in request.app['sockets']:
@@ -247,21 +254,17 @@ def setup(loop):
     app1.router.add_route('POST', '/portify/transfer/start', transfer_start)
     app1.router.add_route('GET', '/spotify/playlists', spotify_playlists)
     app1.router.add_route('GET', '/ws/', wshandler)
-
-    if IS_BUNDLED:
-        add_static(app1.router, '/')
-    else:
-        app1.router.add_static('/', STATIC_ROOT)
-    # app.router.add_static('/index.html', STATIC_ROOT+'/index.html')
-
-    #app1.router.add_static('/', STATIC_ROOT)
+    app1.router.add_route(
+        'GET',
+        r'/{url_path:.*}',
+        dispatcher.static_factory('/', STATIC_ROOT),
+    )
 
     handler1 = app1.make_handler()
 
     yield from loop.create_server(handler1, '0.0.0.0', 3132)
 
-    print("Listening on http://0.0.0.0:3132")
+    uprint("Listening on http://0.0.0.0:3132")
+    uprint("Please open your browser window to http://localhost:3132")
 
     return handler1
-
-

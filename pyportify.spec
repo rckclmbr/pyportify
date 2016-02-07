@@ -8,7 +8,7 @@ a = Analysis(['pyportify/server.py'],
              datas=[
                 ('pyportify/static', 'pyportify'), 
              ],
-             hiddenimports=[],
+             hiddenimports=['aiohttp'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

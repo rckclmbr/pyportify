@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
 import asyncio
+import ssl
 from getpass import getpass
 import sys
 
+import aiohttp
 from aiohttp import ClientSession
+import certifi
 
 from pyportify import app
 from pyportify.google import Mobileclient
 from pyportify.spotify import SpotifyClient
+from pyportify.util import uprint
 
 try:
     input = raw_input
@@ -22,7 +26,10 @@ OAUTH_URL = \
 @asyncio.coroutine
 def main():
 
-    with ClientSession() as session:
+    sslcontext = ssl.create_default_context(cafile=certifi.where())
+    conn = aiohttp.TCPConnector(ssl_context=sslcontext)
+
+    with ClientSession(connector=conn) as session:
 
         google_email = input("Enter Google email address: ")
         google_pass = getpass("Enter Google password: ")
@@ -31,20 +38,20 @@ def main():
 
         logged_in = yield from g.login(google_email, google_pass)
         if not logged_in:
-            print("Invalid Google username/password")
+            uprint("Invalid Google username/password")
             sys.exit(1)
 
-        print("Go to {0} and get an oauth token".format(OAUTH_URL))
+        uprint("Go to {0} and get an oauth token".format(OAUTH_URL))
         spotify_token = input("Enter Spotify oauth token: ")
 
         s = SpotifyClient(session, spotify_token)
 
         logged_in = yield from s.loggedin()
         if not logged_in:
-            print("Invalid Spotify token")
+            uprint("Invalid Spotify token")
             sys.exit(1)
 
-        playlists = yield from s.fetch_playlists()
+        playlists = yield from s.fetch_spotify_playlists()
         yield from app.transfer_playlists(None, session, s, g, playlists)
 
 

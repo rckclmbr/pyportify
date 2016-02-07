@@ -1,8 +1,13 @@
 
 import asyncio
 import pkgutil
+import sys
 
-from aiohttp import web_urldispatcher as d, web
+from aiohttp import web_urldispatcher as d, web, hdrs
+from pathlib import Path
+
+IS_BUNDLED = getattr(sys, 'frozen', False)
+
 
 class StaticRoute(d.Route):
 
@@ -52,17 +57,23 @@ class StaticRoute(d.Route):
         return resp
 
 
-def add_static(dispatcher, prefix, *, name=None, expect_handler=None,
-               chunk_size=256*1024, response_factory=d.StreamResponse):
-    """
-    Adds static files view
-    :param prefix - url prefix
-    """
-    assert prefix.startswith('/')
-    if not prefix.endswith('/'):
-        prefix += '/'
-    route = StaticRoute(name, prefix,
-                        expect_handler=expect_handler,
-                        chunk_size=chunk_size)
-    dispatcher.register_route(route)
+def static_factory(url, directory):
+    @asyncio.coroutine
+    def static_view(request):
+        url_path = request.match_info['url_path']
+        route = get_static_route(url, directory)
+        if url_path == '':
+            url_path = 'index.html'
+        request.match_info['filename'] = url_path
+        ret = yield from route.handle(request)
+        return ret
+    return static_view
+
+
+def get_static_route(url, directory):
+    prefix = url.rsplit('/', 1)[0] or '/'
+    if IS_BUNDLED:
+        route = StaticRoute(None, prefix)
+    else:
+        route = web.StaticRoute(None, prefix, directory)
     return route
