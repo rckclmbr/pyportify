@@ -1,18 +1,61 @@
-language: python
-python:
-  - "3.5"
-install:
-  - "sudo apt-get update"
-  - "sudo apt-get install python-all-dev pandoc"
-  - "pandoc -f markdown -t rst -o README.rst README.md"
-  - "pip install tox"
+matrix:
+    include:
+        - os: osx
+          language: objective-c
+          python:
+            - "3.5"
+          sudo: required
+          env:
+            - TOXENV=py35
+          before_install:
+            - "brew update"
+            - "brew install python3 pandoc"
+            - "sudo pip3 install pyinstaller tox"
+            - "pandoc -f markdown -t rst -o README.rst README.md"
+          install: 
+            - "PYTHONPATH=. pyinstaller pyportify.spec"
+            - "hdiutil create dist/pyportify.dmg -srcfolder dist/ -ov"
+        - os: linux
+          python:
+            - "3.4"
+            - "3.5"
+          env:
+            - TOXENV=py34
+          language: python
+          sudo: required
+          before_install:
+            - "sudo apt-get update"
+            - "sudo apt-get install python-all-dev pandoc"
+            - "pip3 install tox"
+            - "pandoc -f markdown -t rst -o README.rst README.md"
 script: tox
 deploy:
-  provider: pypi
-  user: jbraegger
-  password:
-    secure: P3dSxH4hgJ6JdnGc4zcCneM/jn2qczOh11uxFSJGHEvkMvL4vOrZ0yOiE8BBInUBeT/4kVfWNuBghibS1P06AlWWvUz66KHc719mpHBA3On+q/0troVXT1Pl9xiEr8ITvQda7wWgSZaxSVpaZnkMJZQQkR3ucc7p6qm4mygPyjs=
-  on:
-    all_branches: true
-    repo: rckclmbr/pyportify
-    tags: true
+#  - provider: s3
+#    access_key_id:
+#      secure: "MYYo6qxwsOPiC7NDuDRyJB79Eo4QMsvDRokdD8uHoPcf9O5wTTKnqZDLZeeQhUzOrTcSuYCBdDR2Nxu+G0A9LLm2o8Hi+bTofNxl3GOXFIxHMo/Ra80cuweOmsQwpKpKT4ejm28f5cACWAL8qBebkPlBgM3Q6H/cC0aHB/patO4="
+#    secret_access_key:
+#      secure: "CV4xHW1+BvewQU6jQBiYikhxwuGkXrUxuL0gQQUV63WL1eD7lQVg8GE0b1mhUbtw047DHPgbrTQK5jaao/GBjO6ydXkJCyN+LncTzJhbekA7xWOdvjPlvNDOib2K8UKWyxlPCyuzZfKx9w+HRt5CWCBVwvTdmTGhx5KSpYWEpGQ="
+#    bucket: "pyportify"
+#    skip_cleanup: true
+#    acl: public_read
+#    local_dir: dist
+  - provider: releases
+    api_key:
+      secure: SXoKAyll1TtFrQeOS5i65tzZLdZlXx5jEOnL3tlblmgcEn0sD4iILV/K/qv8KmeE8biBIdbtcqNJPh65covL8Yidaz211Hc4/MHhBU+rfqnrN0EcPR53/zmUgSbzWl7p62zvHdMSmS/iKQKT6Kv3pvyTEDL35oVX8lx0ckzcjkY
+    skip_cleanup: true
+    file: 'dist/pyportify.dmg'
+    on:
+      all_branches: true
+      tags: true
+      repo: rckclmbr/pyportify
+      os: osx
+  - provider: pypi
+    user: jbraegger
+    password:
+      secure: P3dSxH4hgJ6JdnGc4zcCneM/jn2qczOh11uxFSJGHEvkMvL4vOrZ0yOiE8BBInUBeT/4kVfWNuBghibS1P06AlWWvUz66KHc719mpHBA3On+q/0troVXT1Pl9xiEr8ITvQda7wWgSZaxSVpaZnkMJZQQkR3ucc7p6qm4mygPyjs=
+    on:
+      all_branches: true
+      repo: rckclmbr/pyportify
+      tags: true
+      os: linux
+      python: 3.5
