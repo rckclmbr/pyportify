@@ -11,6 +11,7 @@ matrix:
             - "brew update"
             - "brew install python3 pandoc"
             - "sudo pip3 install pyinstaller tox"
+            - "pandoc -f markdown -t rst -o README.rst README.md"
           install: 
             - "PYTHONPATH=. pyinstaller pyportify.spec"
             - "hdiutil create dist/pyportify.dmg -srcfolder dist/ -ov"
@@ -26,7 +27,6 @@ matrix:
             - "sudo apt-get update"
             - "sudo apt-get install python-all-dev pandoc"
             - "pip3 install tox"
-          before_deploy:
             - "pandoc -f markdown -t rst -o README.rst README.md"
 script: tox
 deploy:
