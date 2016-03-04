@@ -1,11 +1,20 @@
 language: python
 python:
   - "3.5"
-install:
-  - "sudo apt-get update"
-  - "sudo apt-get install python-all-dev pandoc"
-  - "pandoc -f markdown -t rst -o README.rst README.md"
-  - "pip install tox"
+matrix:
+    include:
+        - os: osx
+          before_install:
+            - "brew update"
+            - "brew install python3 pandoc"
+            - "pip3 install pyinstaller tox"
+            - "pandoc -f markdown -t rst -o README.rst README.md"
+        - os: linux
+          before_install:
+            - "sudo apt-get update"
+            - "sudo apt-get install python-all-dev pandoc"
+            - "pip3 install tox"
+install: true
 script: tox
 deploy:
   provider: pypi
