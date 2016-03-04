@@ -11,6 +11,7 @@ matrix:
             - "brew update"
             - "brew install python3 pandoc"
             - "sudo pip3 install pyinstaller tox"
+            - "sudo pip3 install -r requirements.txt"
             - "pandoc -f markdown -t rst -o README.rst README.md"
           install: 
             - "PYTHONPATH=. pyinstaller pyportify.spec"
