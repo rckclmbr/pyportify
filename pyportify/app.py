@@ -1,5 +1,6 @@
 
 import asyncio
+from asyncio.locks import Semaphore
 import json
 import ssl
 
@@ -12,7 +13,7 @@ from aiohttp import web, ClientSession
 from aiohttp.web import json_response
 from pyportify import dispatcher
 
-from pyportify.spotify import SpotifyClient, get_queries
+from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
 from pyportify.util import uprint
 
@@ -28,6 +29,7 @@ class UserScope(object):
 
 
 user_scope = UserScope()
+semaphore = Semaphore(20)
 
 
 @asyncio.coroutine
@@ -79,6 +81,7 @@ def spotify_login(request):
 def transfer_start(request):
 
     lists = yield from request.json()
+    lists = [l['uri'] for l in lists]
 
     if not user_scope.google_token:
         return json_response({
@@ -105,7 +108,7 @@ def transfer_start(request):
         g = Mobileclient(session, user_scope.google_token)
         s = SpotifyClient(session, user_scope.spotify_token)
 
-        yield from transfer_playlists(request, session, s, g, lists)
+        yield from transfer_playlists(request, s, g, lists)
         return json_response({
             "status": 200,
             "message": "transfer will start.",
@@ -125,10 +128,11 @@ def spotify_playlists(request):
 
 
 @asyncio.coroutine
-def transfer_playlists(request, session, s, g, playlists):
-    for d_list in playlists:
-        sp_playlist = yield from s.fetch_playlist(d_list["uri"])
-        sp_playlist_tracks = yield from s.fetch_playlist_tracks(d_list["uri"])
+def transfer_playlists(request, s, g, sp_playlist_uris):
+    for sp_playlist_uri in sp_playlist_uris:
+        sp_playlist = yield from s.fetch_playlist(sp_playlist_uri)
+        sp_playlist_tracks = yield from s.fetch_playlist_tracks(
+            sp_playlist_uri)
 
         track_count = len(sp_playlist_tracks)
         uprint(
@@ -137,66 +141,27 @@ def transfer_playlists(request, session, s, g, playlists):
         )
         playlist_json = {
             "playlist": {
-                "uri": d_list["uri"],
+                "uri": sp_playlist_uri,
                 "name": sp_playlist['name'],
             },
             "name": sp_playlist['name'],
         }
-        yield from emit(
-            request,
-            "portify",
-            {"type": "playlist_length", "data": {"length": track_count}}
-        )
-        yield from emit(
-            request,
-            "portify",
-            {"type": "playlist_started", "data": playlist_json}
-        )
 
-        gm_track_ids = [None] * len(sp_playlist_tracks)
+        yield from emit_playlist_length(request, track_count)
+        yield from emit_playlist_started(request, playlist_json)
 
-        @asyncio.coroutine
-        def search_gm_track(args):
-            i, spotify_uri, search_query = args
-            track = yield from g.find_best_track(search_query)
-            if track:
-                gm_track_id = track["nid"]
-                gm_track_ids[i] = gm_track_id
-                uprint(
-                    "({0}/{1}) Found '{2}' in Google Music".format(
-                        i+1, track_count, search_query
-                    )
-                )
-                yield from emit(request, "gmusic", {
-                    "type": "added",
-                    "data": {
-                        "spotify_track_uri": spotify_uri,
-                        "spotify_track_name": search_query,
-                        "found": True,
-                        "karaoke": False,
-                    }
-                })
-            else:
-                uprint(
-                    "({0}/{1}) No match found for '{2}'"
-                    .format(i+1, track_count, search_query)
-                )
-                yield from emit(request, "gmusic", {
-                    "type": "not_added",
-                    "data": {
-                        "spotify_track_uri": spotify_uri,
-                        "spotify_track_name": search_query,
-                        "found": False,
-                        "karaoke": False,
-                    }
-                })
-            return i
+        if not sp_playlist_tracks:
+            yield from emit_playlist_ended(request, playlist_json)
+            return
 
-        queries = get_queries(d_list['uri'], sp_playlist_tracks)
-        tasks = [search_gm_track(query) for query in queries]
-        if tasks:
-            yield from asyncio.wait(tasks)
-        gm_track_ids = [i for i in gm_track_ids if i is not None]
+        tasks = []
+        for i, sp_track in enumerate(sp_playlist_tracks):
+            query = SpotifyQuery(i, sp_playlist_uri, sp_track, track_count)
+            future = search_gm_track(request, g, query)
+            tasks.append(future)
+
+        done, _ = yield from asyncio.wait(tasks)
+        gm_track_ids = [i.result() for i in done if i.result() is not None]
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
@@ -205,12 +170,9 @@ def transfer_playlists(request, session, s, g, playlists):
             playlist_id = yield from g.create_playlist(sp_playlist['name'])
             yield from g.add_songs_to_playlist(playlist_id, gm_track_ids)
             uprint("Done")
-        yield from emit(
-            request,
-            "portify",
-            {"type": "playlist_ended", "data": playlist_json}
-        )
-    yield from emit(request, "portify", {"type": "all_done", "data": None})
+
+        yield from emit_playlist_ended(request, playlist_json)
+    yield from emit_all_done(request)
 
 
 @asyncio.coroutine
@@ -221,6 +183,61 @@ def emit(request, event, data):
 
     for ws in request.app['sockets']:
         ws.send_str(json.dumps({'eventName': event, 'eventData': data}))
+
+
+@asyncio.coroutine
+def emit_added_event(request, found, sp_playlist_uri, search_query):
+    yield from emit(request, "gmusic", {
+        "type": "added" if found else "not_added",
+        "data": {
+            "spotify_track_uri": sp_playlist_uri,
+            "spotify_track_name": search_query,
+            "found": found,
+            "karaoke": False,
+        }
+    })
+
+
+@asyncio.coroutine
+def emit_playlist_length(request, track_count):
+    yield from emit(request, "portify",
+                    {"type": "playlist_length",
+                     "data": {"length": track_count}})
+
+
+@asyncio.coroutine
+def emit_playlist_started(request, playlist_json):
+    yield from emit(request, "portify",
+                    {"type": "playlist_started", "data": playlist_json})
+
+
+@asyncio.coroutine
+def emit_playlist_ended(request, playlist_json):
+    yield from emit(request, "portify",
+                    {"type": "playlist_ended", "data": playlist_json})
+
+
+@asyncio.coroutine
+def emit_all_done(request):
+    yield from emit(request, "portify", {"type": "all_done", "data": None})
+
+
+@asyncio.coroutine
+def search_gm_track(request, g, sp_query):
+    with (yield from semaphore):
+        search_query = sp_query.search_query()
+
+        track = yield from g.find_best_track(search_query)
+        if track:
+            gm_log_found(sp_query)
+            yield from emit_added_event(request, True,
+                                        sp_query.playlist_uri, search_query)
+            return track['nid']
+
+        gm_log_not_found(sp_query)
+        yield from emit_added_event(request, False,
+                                    sp_query.playlist_uri, search_query)
+        return None
 
 
 @asyncio.coroutine
@@ -243,6 +260,16 @@ def wshandler(request):
 
     request.app['sockets'].remove(resp)
     return resp
+
+
+def gm_log_found(sp_query):
+    uprint("({0}/{1}) Found '{2}' in Google Music".format(
+           sp_query.i+1, sp_query.track_count, sp_query.search_query()))
+
+
+def gm_log_not_found(sp_query):
+    uprint("({0}/{1}) No match found for '{2}' in Google Music".format(
+           sp_query.i+1, sp_query.track_count, sp_query.search_query()))
 
 
 @asyncio.coroutine

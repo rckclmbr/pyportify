@@ -2,23 +2,25 @@ import asyncio
 import urllib
 
 
-def get_queries(sp_playlist_uri, sp_playlist_tracks):
-    queries = []
-    for i, track in enumerate(sp_playlist_tracks):
-        sp_track = track['track']
-        if "artists" in sp_track:
-            sp_artist = sp_track['artists'][0]
-        else:
-            sp_artist = None
-        if sp_artist:
+class SpotifyQuery():
+
+    def __init__(self, i, sp_playlist_uri, sp_track, track_count):
+        self.i = i
+        self.playlist_uri = sp_playlist_uri
+        self.sp_track = sp_track
+        self.track_count = track_count
+
+    def search_query(self):
+        sp_artist = None
+        if "artists" in self.sp_track['track']:
+            sp_artist = self.sp_track['track']['artists'][0]
             search_query = "{0} - {1}".format(
                 sp_artist['name'],
-                sp_track['name'],
+                self.sp_track['track']['name'],
             )
         else:
-            search_query = "{0}".format(sp_track['name'])
-        queries.append((i, sp_playlist_uri, search_query))
-    return queries
+            search_query = "{0}".format(self.sp_track['name'])
+        return search_query
 
 
 def encode(values):

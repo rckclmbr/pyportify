@@ -52,7 +52,7 @@ def start():
             sys.exit(1)
 
         playlists = yield from s.fetch_spotify_playlists()
-        yield from app.transfer_playlists(None, session, s, g, playlists)
+        yield from app.transfer_playlists(None, s, g, playlists)
 
 
 def main():
