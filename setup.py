@@ -6,7 +6,7 @@ import os
 import re
 
 basepath = os.path.dirname(__file__)
-readme_rst = os.path.join(basepath, "README.rst")
+readme_rst = os.path.join(basepath, "README.md")
 requirements_txt = os.path.join(basepath, "requirements.txt")
 
 with open(readme_rst) as readme:
