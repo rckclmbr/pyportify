@@ -20,6 +20,7 @@ matrix:
           python: "3.4"
           env:
             - TOXENV=py34
+          language: python
           sudo: required
           before_install:
             - "sudo apt-get update"
