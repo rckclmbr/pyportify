@@ -6,11 +6,19 @@ import os
 import re
 
 basepath = os.path.dirname(__file__)
-readme_rst = os.path.join(basepath, "README.rst")
 requirements_txt = os.path.join(basepath, "requirements.txt")
 
-with open(readme_rst) as readme:
-    long_description = readme.read()
+try:
+    import pypandoc
+    long_description = pypandoc.convert_file('README.md', 'rst')
+    long_description = long_description.replace("\r","") # YOU  NEED THIS LINE
+except (ImportError, OSError):
+    print("Pandoc not found. Long_description conversion failure.")
+    import io
+    # pandoc is not installed, fallback to using raw contents
+    with io.open('README.md', encoding="utf-8") as f:
+        long_description = f.read()
+
 
 with open(requirements_txt) as reqs:
     install_requires = [
