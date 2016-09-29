@@ -160,8 +160,8 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
             future = search_gm_track(request, g, query)
             tasks.append(future)
 
-        done, _ = yield from asyncio.wait(tasks)
-        gm_track_ids = [i.result() for i in done if i.result() is not None]
+        done = yield from asyncio.gather(*tasks)
+        gm_track_ids = [i for i in done if i is not None]
 
         # Once we have all the gm_trackids, add them
         if len(gm_track_ids) > 0:
