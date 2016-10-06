@@ -48,6 +48,7 @@ deploy:
       tags: true
       repo: rckclmbr/pyportify
       os: osx
+      python: 3.5
   - provider: pypi
     user: jbraegger
     password:
