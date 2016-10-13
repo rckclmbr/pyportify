@@ -52,6 +52,7 @@ def start():
             sys.exit(1)
 
         playlists = yield from s.fetch_spotify_playlists()
+        playlists = [l['uri'] for l in playlists]
         yield from app.transfer_playlists(None, s, g, playlists)
 
 

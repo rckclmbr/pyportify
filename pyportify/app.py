@@ -178,7 +178,7 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
 @asyncio.coroutine
 def emit(request, event, data):
     if request is None:
-        uprint("Not emitting {0}".format(event))
+        # uprint("Not emitting {0}".format(event))
         return
 
     for ws in request.app['sockets']:

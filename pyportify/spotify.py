@@ -11,7 +11,6 @@ class SpotifyQuery():
         self.track_count = track_count
 
     def search_query(self):
-        sp_artist = None
         if "artists" in self.sp_track['track']:
             sp_artist = self.sp_track['track']['artists'][0]
             search_query = "{0} - {1}".format(
@@ -95,7 +94,6 @@ class SpotifyClient(object):
                 'name': 'Saved Tracks',
                 'uri': uri,
             }
-
         parts = uri.split(':')  # spotify:user:<user_id>:playlist:<playlist_id>
         user_id = parts[2]
         playlist_id = parts[-1]
