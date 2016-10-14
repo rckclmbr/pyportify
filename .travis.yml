@@ -47,7 +47,8 @@ deploy:
       all_branches: true
       tags: true
       repo: rckclmbr/pyportify
-      os: osx
+      # travis doesn't like this, use python instead. need to figure out why
+      # os: osx
       python: 3.5
   - provider: pypi
     user: jbraegger
