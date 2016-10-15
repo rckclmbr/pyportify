@@ -22,11 +22,11 @@ Download
 
 Windows:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.3.6/pyportify.zip
+https://github.com/rckclmbr/pyportify/releases/download/v0.3.7d/pyportify.zip
 
 OSX:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.3.6/pyportify.dmg
+https://github.com/rckclmbr/pyportify/releases/download/v0.3.7d/pyportify.dmg
 
 Install from pypi
 -----------------
