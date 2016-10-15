@@ -45,12 +45,9 @@ deploy:
     file: 'dist/pyportify.dmg'
     on:
       all_branches: true
-      tags: true
       repo: rckclmbr/pyportify
-      # travis doesn't like this, use python instead. need to figure out why
-      # os: osx
-      python: 
-        - "3.5"
+      tags: true
+      language: objective-c
   - provider: pypi
     user: jbraegger
     password:
