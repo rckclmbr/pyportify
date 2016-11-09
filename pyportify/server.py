@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import logging
 import asyncio
 from pyportify import app
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
+
     loop = asyncio.get_event_loop()
     handler = loop.run_until_complete(app.setup(loop))
     try:
