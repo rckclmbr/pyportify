@@ -93,6 +93,8 @@ class Mobileclient(object):
                 if pl[k] == v:
                     return pl
 
+        raise KeyError(terms)
+
     @asyncio.coroutine
     def delete_playlist(self, playlist_id):
         meth = functools.partial(self._sync_gmapi.delete_playlist, playlist_id)
@@ -101,15 +103,17 @@ class Mobileclient(object):
 
     @asyncio.coroutine
     def ensure_songs_in_playlist(self, playlist_id, track_ids):
-        playlist = yield from self.get_cached_playlist(playlist_id)
         existing_track_ids = []
-        if playlist:
+        try:
+            playlist = yield from self.get_cached_playlist(playlist_id)
             existing_track_ids.extend([t['id'] for t in playlist['tracks']])
+        except KeyError:
+            pass
 
         # Without order, there is chaos
         missing_track_ids = [t for t in track_ids if not t in existing_track_ids]
         if not missing_track_ids:
-            return
+            return []
 
         final_track_ids = existing_track_ids + missing_track_ids
         # Google supports a max of 1000 per playlist
@@ -117,6 +121,8 @@ class Mobileclient(object):
 
         # Need the output so be sync for now
         added_track_ids = yield from self.add_songs_to_playlist(playlist_id, missing_track_ids)
+        if added_track_ids is None:
+            added_track_ids = []
         # meth = functools.partial(self._sync_gmapi.add_songs_to_playlist, playlist_id, missing_track_ids)
         # added_track_ids = yield from self._loop.run_in_executor(None, meth)
 

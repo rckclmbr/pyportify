@@ -79,7 +79,7 @@ def start():
         else:
             yield from g.cache_playlists()
             with open('google_playlists.pickle', 'wb') as f:
-                f.write(pickle.dump(g._playlists))
+                pickle.dump(g._playlists, f)
 
         log.info('Fetching Spotify playlists')
         playlists = yield from s.fetch_spotify_playlists()

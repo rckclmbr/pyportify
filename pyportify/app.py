@@ -162,7 +162,7 @@ def transfer_playlist(request, s, g, sp_playlist):
              sp_playlist['name'], len(gm_track_ids), track_count)
 
     missing_track_ids = [
-        sp_playlist_tracks[x]['name']
+        sp_playlist_tracks[x].get('name', sp_playlist_tracks[x].get('id', sp_playlist_tracks[x]))
         for x, val in enumerate(gm_track_map)
         if val is None
     ]
