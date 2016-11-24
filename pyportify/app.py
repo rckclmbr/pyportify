@@ -11,8 +11,8 @@ import sys
 
 from aiohttp import web, ClientSession
 from aiohttp.web import json_response
-from pyportify import dispatcher
 
+from pyportify.middlwares import IndexMiddleware
 from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
 from pyportify.util import uprint
@@ -274,18 +274,14 @@ def gm_log_not_found(sp_query):
 
 @asyncio.coroutine
 def setup(loop):
-    app1 = web.Application(loop=loop)
+    app1 = web.Application(loop=loop, middlewares=[IndexMiddleware()])
     app1['sockets'] = []
     app1.router.add_route('POST', '/google/login', google_login)
     app1.router.add_route('POST', '/spotify/login', spotify_login)
     app1.router.add_route('POST', '/portify/transfer/start', transfer_start)
     app1.router.add_route('GET', '/spotify/playlists', spotify_playlists)
     app1.router.add_route('GET', '/ws/', wshandler)
-    app1.router.add_route(
-        'GET',
-        r'/{url_path:.*}',
-        dispatcher.static_factory('/', STATIC_ROOT),
-    )
+    app1.router.add_static('/', STATIC_ROOT)
 
     handler1 = app1.make_handler()
 
