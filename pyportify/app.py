@@ -17,8 +17,14 @@ from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
 from pyportify.util import uprint
 
+IS_BUNDLED = getattr(sys, 'frozen', False)
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+if IS_BUNDLED:
+    STATIC_ROOT = os.path.dirname(sys.modules['pyportify'].__file__)
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
 class UserScope(object):

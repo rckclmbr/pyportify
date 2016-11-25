@@ -1,6 +1,5 @@
 import asyncio
 
-
 def IndexMiddleware(index='index.html'):
     @asyncio.coroutine
     def middleware_factory(app, handler):
