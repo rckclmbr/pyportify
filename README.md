@@ -26,7 +26,7 @@ https://github.com/rckclmbr/pyportify/releases/download/v0.3.12/pyportify.zip
 
 OSX:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.3.1/pyportify.dmg
+https://github.com/rckclmbr/pyportify/releases/download/v0.3.12/pyportify.dmg
 
 Install from pypi
 -----------------
