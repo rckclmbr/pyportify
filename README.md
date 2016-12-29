@@ -42,7 +42,7 @@ Ubuntu:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y python-pip3
+sudo apt-get install -y python3-pip
 sudo pip3 install pyportify
 ```
 
