@@ -1,6 +1,8 @@
 import json
 import uuid
 import urllib
+import gmusicapi
+import functools
 
 import asyncio
 from pyportify import gpsoauth
@@ -15,28 +17,45 @@ def encode(values):
     return urllib.parse.urlencode(values)
 
 
+class AuthenticationError(ValueError):
+    pass
+
+
 class Mobileclient(object):
 
-    def __init__(self, session, token=None):
+    def __init__(self, session, token=None, max_in_flight=1):
         self.token = token
         self.session = session
 
+        self._loop = asyncio.get_event_loop()
+        self._sync_gmapi = gmusicapi.Mobileclient()
+
+        self.limiter = asyncio.Semaphore(value=max_in_flight)
+        self.is_not_limited = asyncio.Event()
+        self.is_not_limited.set()
+
     @asyncio.coroutine
-    def login(self, username, password):
-        android_id = "asdkfjaj"
+    def login(self, username, password, android_id="asdkfjaj"):
         res = gpsoauth.perform_master_login(username, password, android_id)
-
         if "Token" not in res:
-            return None
-
+            raise AuthenticationError(username)
         self._master_token = res['Token']
+
         res = gpsoauth.perform_oauth(
-            username, self._master_token, android_id,
-            service='sj', app='com.google.android.music',
-            client_sig='38918a453d07199354f8b19af05ec6562ced5788')
+            username,
+            self._master_token,
+            android_id,
+            service='sj',
+            app='com.google.android.music',
+            client_sig='38918a453d07199354f8b19af05ec6562ced5788'
+        )
         if 'Auth' not in res:
-            return None
+            raise AuthenticationError(username)
         self.token = res["Auth"]
+
+        meth = functools.partial(self._sync_gmapi.login, username, password, android_id)
+        yield from self._loop.run_in_executor(None, meth)
+
         return self.token
 
     @asyncio.coroutine
@@ -58,50 +77,138 @@ class Mobileclient(object):
         return None
 
     @asyncio.coroutine
+    def cache_playlists(self):
+        meth = functools.partial(self._sync_gmapi.get_all_user_playlist_contents)
+        self._playlists = yield from self._loop.run_in_executor(None, meth)
+
+    @asyncio.coroutine
+    def get_cached_playlist(self, name=None, playlist_id=None):
+        terms = dict(
+            name=name,
+            id=playlist_id,
+        )
+
+        for pl in self._playlists:
+            for k, v in terms.items():
+                if pl[k] == v:
+                    return pl
+
+        raise KeyError(terms)
+
+    @asyncio.coroutine
+    def delete_playlist(self, playlist_id):
+        meth = functools.partial(self._sync_gmapi.delete_playlist, playlist_id)
+        ret = yield from self._loop.run_in_executor(None, meth)
+        return ret
+
+    @asyncio.coroutine
+    def ensure_songs_in_playlist(self, playlist_id, track_ids):
+        existing_track_ids = []
+        try:
+            playlist = yield from self.get_cached_playlist(playlist_id)
+            existing_track_ids.extend([t['id'] for t in playlist['tracks']])
+        except KeyError:
+            pass
+
+        # Without order, there is chaos
+        missing_track_ids = [t for t in track_ids if not t in existing_track_ids]
+        if not missing_track_ids:
+            return []
+
+        final_track_ids = existing_track_ids + missing_track_ids
+        # Google supports a max of 1000 per playlist
+        final_track_ids = final_track_ids[:1000]
+
+        # Need the output so be sync for now
+        added_track_ids = yield from self.add_songs_to_playlist(playlist_id, missing_track_ids)
+        if added_track_ids is None:
+            added_track_ids = []
+        # meth = functools.partial(self._sync_gmapi.add_songs_to_playlist, playlist_id, missing_track_ids)
+        # added_track_ids = yield from self._loop.run_in_executor(None, meth)
+
+        # if len(added_track_ids) != len(missing_track_ids):
+        #     missing = set(missing_track_ids) - added_track_ids
+        #     raise ValueError(
+        #         "Got back %d added track ids when we wanted %d. Missing: %s" % (len(added_track_ids), missing)
+        #     )
+
+        return added_track_ids
+
+    @asyncio.coroutine
     def create_playlist(self, name, public=False):
         mutations = build_create_playlist(name, public)
-        data = yield from self._http_post("/playlistbatch?alt=json", {
-            "mutations": mutations,
-        })
+        data = yield from self._http_post("/playlistbatch?alt=json", {"mutations": mutations,})
         return data["mutate_response"][0]["id"]  # playlist_id
 
     @asyncio.coroutine
     def add_songs_to_playlist(self, playlist_id, track_ids):
         mutations = build_add_tracks(playlist_id, track_ids)
-        yield from self._http_post("/plentriesbatch?alt=json", {
-            "mutations": mutations,
-        })
+        yield from self._http_post("/plentriesbatch?alt=json", {"mutations": mutations,})
+
+    @asyncio.coroutine
+    def _backoff(self, timeout=10):
+        if not self.is_not_limited.is_set():
+            yield from self.is_not_limited.wait()
+        else:
+            log.debug('Hit API limit; waiting %d seconds until trying again.', timeout)
+            self.is_not_limited.clear()
+            yield from asyncio.sleep(timeout)
+            self.is_not_limited.set()
 
     @asyncio.coroutine
     def _http_get(self, url):
-        headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self.token),
-            "Content-type": "application/json",
-        }
+        yield from self.limiter.acquire()
+        try:
+            yield from self.is_not_limited.wait()
 
-        res = yield from self.session.request(
-            'GET',
-            FULL_SJ_URL + url,
-            headers=headers
-        )
-        data = yield from res.json()
+            headers = {
+                "Authorization": "GoogleLogin auth={0}".format(self.token),
+                "Content-type": "application/json",
+            }
+
+            res = yield from self.session.request('GET', FULL_SJ_URL + url, headers=headers)
+            data = yield from res.json()
+
+            if "error" in data:
+                if data['error']['status'] in (429, 401):
+                    log.warning('Google API limit exceeded: %s', data['error'].get('message'))
+                    yield from self._backoff()
+                    data = yield from self._http_get(url)
+                else:
+                    raise Exception("Error: {0}, url: {1}".format(data, url))
+        finally:
+            self.limiter.release()
         return data
 
     @asyncio.coroutine
     def _http_post(self, url, data):
-        data = json.dumps(data)
-        headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self.token),
-            "Content-type": "application/json",
-        }
-        res = yield from self.session.request(
-            'POST',
-            FULL_SJ_URL + url,
-            data=data,
-            headers=headers,
-        )
-        ret = yield from res.json()
-        return ret
+        yield from self.limiter.acquire()
+        try:
+            yield from self.is_not_limited.wait()
+
+            data = json.dumps(data)
+            headers = {
+                "Authorization": "GoogleLogin auth={0}".format(self.token),
+                "Content-type": "application/json",
+            }
+            res = yield from self.session.request(
+                'POST',
+                FULL_SJ_URL + url,
+                data=data,
+                headers=headers,
+            )
+            data = yield from res.json()
+
+            if "error" in data:
+                if data['error']['status'] in (429, 401):
+                    log.warning('Google API limit exceeded: %s', data['error'].get('message'))
+                    yield from self._backoff()
+                    data = yield from self._http_get(url)
+                else:
+                    raise Exception("Error: {0}, url: {1}".format(data, url))
+        finally:
+            self.limiter.release()
+        return data
 
 
 def build_add_tracks(playlist_id, track_ids):
@@ -141,16 +248,18 @@ def build_add_tracks(playlist_id, track_ids):
 
 
 def build_create_playlist(name, public):
-    return [{
-        "create": {
-            "creationTimestamp": "-1",
-            "deleted": False,
-            "lastModifiedTimestamp": 0,
-            "name": name,
-            "type": "USER_GENERATED",
-            "accessControlled": public,
+    return [
+        {
+            "create": {
+                "creationTimestamp": "-1",
+                "deleted": False,
+                "lastModifiedTimestamp": 0,
+                "name": name,
+                "type": "USER_GENERATED",
+                "accessControlled": public,
+            }
         }
-    }]
+    ]
 
 
 def parse_auth_response(s):

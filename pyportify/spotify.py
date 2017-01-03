@@ -1,5 +1,9 @@
 import asyncio
 import urllib
+import os
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class SpotifyQuery():
@@ -27,16 +31,24 @@ def encode(values):
 
 
 class SpotifyClient(object):
+    _api_root = 'https://api.spotify.com/v1'
 
-    def __init__(self, session, token=None):
+    def __init__(self, session, token=None, max_in_flight=1):
         self.session = session
         self.token = token
 
+        self.limiter = asyncio.Semaphore(value=max_in_flight)
+        self.is_not_limited = asyncio.Event()
+        self.is_not_limited.set()
+
+    def _gen_url(self, url):
+        if not url.startswith('http'):
+            url = '%s%s' % (self._api_root, url)
+        return url
+
     @asyncio.coroutine
     def loggedin(self):
-        playlists = yield from self._http_get(
-            'https://api.spotify.com/v1/me/playlists',
-        )
+        playlists = yield from self._http_get('/me/playlists')
         if "error" in playlists:
             return False
         return True
@@ -49,7 +61,7 @@ class SpotifyClient(object):
             "type": "custom",
         }]
 
-        url = 'https://api.spotify.com/v1/me/playlists'
+        url = '/me/playlists'
         playlists = yield from self._http_get_all(url)
         ret_playlists.extend(playlists)
         return ret_playlists
@@ -67,7 +79,7 @@ class SpotifyClient(object):
 
     @asyncio.coroutine
     def fetch_saved_tracks(self):
-        url = 'https://api.spotify.com/v1/me/tracks'
+        url = '/me/tracks'
         tracks = yield from self._http_get_all(url)
         return tracks
 
@@ -82,7 +94,7 @@ class SpotifyClient(object):
         user_id = parts[2]
         playlist_id = parts[-1]
 
-        url = 'https://api.spotify.com/v1/users/{0}/playlists/{1}/tracks' \
+        url = '/users/{0}/playlists/{1}/tracks' \
             .format(user_id, playlist_id)
         ret = yield from self._http_get_all(url)
         return ret
@@ -98,7 +110,7 @@ class SpotifyClient(object):
         user_id = parts[2]
         playlist_id = parts[-1]
 
-        url = 'https://api.spotify.com/v1/users/{0}/playlists/{1}'.format(
+        url = '/users/{0}/playlists/{1}'.format(
             user_id,
             playlist_id,
         )
@@ -106,18 +118,43 @@ class SpotifyClient(object):
         return ret
 
     @asyncio.coroutine
+    def _backoff(self, timeout=10):
+        if not self.is_not_limited.is_set():
+            yield from self.is_not_limited.wait()
+        else:
+            log.debug('Hit API limit; waiting %d seconds until trying again.', timeout)
+            self.is_not_limited.clear()
+            yield from asyncio.sleep(timeout)
+            self.is_not_limited.set()
+
+    @asyncio.coroutine
     def _http_get(self, url):
-        headers = {
-            'Authorization': 'Bearer {0}'.format(self.token),
-            "Content-type": "application/json",
-        }
-        res = yield from self.session.request(
-            'GET',
-            url,
-            headers=headers,
-            skip_auto_headers=['Authorization'],
-        )
-        data = yield from res.json()
-        if "error" in data:
-            raise Exception("Error: {0}, url: {1}".format(data, url))
+        url = self._gen_url(url)
+
+        yield from self.limiter.acquire()
+        try:
+            yield from self.is_not_limited.wait()
+
+            headers = {
+                'Authorization': 'Bearer {0}'.format(self.token),
+                "Content-type": "application/json",
+            }
+
+            res = yield from self.session.request(
+                'GET',
+                url,
+                headers=headers,
+                skip_auto_headers=['Authorization'],
+            )
+            data = yield from res.json()
+
+            if "error" in data:
+                if data['error']['status'] == 429:
+                    log.warning('Spotify API limit exceeded: %s', data['error'].get('message'))
+                    yield from self._backoff()
+                    data = yield from self._http_get(url)
+                else:
+                    raise Exception("Error: {0}, url: {1}".format(data, url))
+        finally:
+            self.limiter.release()
         return data
