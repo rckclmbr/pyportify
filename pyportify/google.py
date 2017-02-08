@@ -51,7 +51,8 @@ class Mobileclient(object):
     def find_best_track(self, search_query):
         data, retries = {}, 50
         while 'entries' not in data and retries > 0:
-            data, retries = yield from self.search_all_access(search_query, retries=retries)
+            data, retries = yield from self.search_all_access(search_query,
+                                                              retries=retries)
         if "entries" not in data:
             return None
         for entry in data["entries"]:
