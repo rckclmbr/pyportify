@@ -69,7 +69,7 @@ before_install:
       new_python_version="3.5.1";
 
       echo "Installing Python${new_python_version}...";
-      pyenv install ${new_python_version};
+      env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install ${new_python_version};
       pyenv versions;
 
       echo "Making Python${new_python_version} the global python...";
@@ -81,8 +81,10 @@ before_install:
       echo Upgrading pip...;
       pip install --upgrade pip;
 
+      echo Installing pandoc...;
       brew install pandoc;
 
+      echo Installing package dependencies...;
       pip3 install pyinstaller==3.1.1 tox;
       pip3 install -r requirements.txt;
       pandoc -f markdown -t rst -o README.rst README.md;
