@@ -7,13 +7,7 @@ matrix:
           sudo: required
           env:
             - TOXENV=py35
-          before_install:
-            - "brew update"
-            - "brew install python3 pandoc"
-            - "sudo pip3 install pyinstaller==3.1.1 tox"
-            - "sudo pip3 install -r requirements.txt"
-            - "pandoc -f markdown -t rst -o README.rst README.md"
-          install: 
+          install:
             - "PYTHONPATH=. pyinstaller --onefile pyportify.spec"
             - "hdiutil create dist/pyportify.dmg -srcfolder dist/ -ov"
           deploy:
@@ -54,4 +48,44 @@ matrix:
             - "sudo apt-get install python-all-dev pandoc"
             - "pip3 install tox"
             - "pandoc -f markdown -t rst -o README.rst README.md"
+before_install:
+
+  # Install python 3.5.0 on OS X
+  # Workaround for Tavis's current lack of official support for Python on OS X
+  # Reference https://github.com/travis-ci/travis-ci/issues/2312
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      echo "TRAVIS_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION";
+
+      echo Updating Homebrew...;
+      brew update;
+
+      echo Installing pyenv...;
+      brew unlink pyenv;
+      brew install pyenv;
+
+      echo Installing pyenv shims...;
+      eval "$(pyenv init -)";
+
+      new_python_version="3.5.1";
+
+      echo "Installing Python${new_python_version}...";
+      pyenv install ${new_python_version};
+      pyenv versions;
+
+      echo "Making Python${new_python_version} the global python...";
+      pyenv global ${new_python_version};
+
+      echo "python --version" `python --version`;
+      echo "pip --version" `pip --version`;
+
+      echo Upgrading pip...;
+      pip install --upgrade pip;
+
+      brew install pandoc;
+
+      pip3 install pyinstaller==3.1.1 tox;
+      pip3 install -r requirements.txt;
+      pandoc -f markdown -t rst -o README.rst README.md;
+    fi
+
 script: tox
