@@ -1,12 +1,13 @@
 import json
 import uuid
 import urllib
+from uuid import getnode as getmac
 
 import asyncio
 from pyportify import gpsoauth
 
 SJ_DOMAIN = "mclients.googleapis.com"
-SJ_URL = "/sj/v1.11"
+SJ_URL = "/sj/v2.5"
 
 FULL_SJ_URL = "https://{0}{1}".format(SJ_DOMAIN, SJ_URL)
 
@@ -23,7 +24,7 @@ class Mobileclient(object):
 
     @asyncio.coroutine
     def login(self, username, password):
-        android_id = "asdkfjaj"
+        android_id = _get_android_id()
         res = gpsoauth.perform_master_login(username, password, android_id)
 
         if "Token" not in res:
@@ -41,7 +42,11 @@ class Mobileclient(object):
 
     @asyncio.coroutine
     def search_all_access(self, search_query, max_results=30):
-        params = {"q": search_query, "max_items": max_results, 'type': 1}
+        params = {
+            "q": search_query,
+            "max-results": max_results,
+            'ct': '1,2,3,4,6,7,8,9',
+        }
         query = encode(params)
         url = "/query?{0}".format(query)
         data = yield from self._http_get(url)
@@ -49,28 +54,46 @@ class Mobileclient(object):
 
     @asyncio.coroutine
     def find_best_track(self, search_query):
-        data = yield from self.search_all_access(search_query)
-        if "entries" not in data:
-            return None
-        for entry in data["entries"]:
-            if entry["type"] == "1":
-                return entry["track"]
-        return None
+        track = None
+        for i in range(0, 2):
+            data = yield from self.search_all_access(search_query)
+            if 'suggestedQuery' in data:
+                data = yield from self.search_all_access(
+                    data['suggestedQuery'])
+            if "entries" not in data:
+                continue
+            for entry in data["entries"]:
+                if entry["type"] == "1":
+                    track = entry["track"]
+                    break
+            if track:
+                break
+        return track
+
+    @asyncio.coroutine
+    def fetch_playlists(self):
+        data = yield from self._http_post("/playlistfeed", {})
+        # TODO: paging
+        return data
 
     @asyncio.coroutine
     def create_playlist(self, name, public=False):
         mutations = build_create_playlist(name, public)
-        data = yield from self._http_post("/playlistbatch?alt=json", {
+        data = yield from self._http_post("/playlistbatch", {
             "mutations": mutations,
         })
-        return data["mutate_response"][0]["id"]  # playlist_id
+        res = data["mutate_response"]
+        playlist_id = res[0]["id"]
+        return playlist_id
 
     @asyncio.coroutine
     def add_songs_to_playlist(self, playlist_id, track_ids):
-        mutations = build_add_tracks(playlist_id, track_ids)
-        yield from self._http_post("/plentriesbatch?alt=json", {
-            "mutations": mutations,
-        })
+        data = {
+            "mutations": build_add_tracks(playlist_id, track_ids),
+        }
+        res = yield from self._http_post('/plentriesbatch', data)
+        added_ids = [e['id'] for e in res['mutate_response']]
+        return added_ids
 
     @asyncio.coroutine
     def _http_get(self, url):
@@ -82,7 +105,12 @@ class Mobileclient(object):
         res = yield from self.session.request(
             'GET',
             FULL_SJ_URL + url,
-            headers=headers
+            headers=headers,
+            params={
+                'tier': 'aa',
+                'hl': 'en_US',
+                'dv': 0,
+            }
         )
         data = yield from res.json()
         return data
@@ -99,6 +127,12 @@ class Mobileclient(object):
             FULL_SJ_URL + url,
             data=data,
             headers=headers,
+            params={
+                'tier': 'aa',
+                'hl': 'en_US',
+                'dv': 0,
+                'alt': 'json',
+            }
         )
         ret = yield from res.json()
         return ret
@@ -107,14 +141,14 @@ class Mobileclient(object):
 def build_add_tracks(playlist_id, track_ids):
     mutations = []
     prev_id = ""
-    cur_id = str(uuid.uuid4())
-    next_id = str(uuid.uuid4())
+    cur_id = str(uuid.uuid1())
+    next_id = str(uuid.uuid1())
 
     for i, track_id in enumerate(track_ids):
         details = {
             "create": {
                 "clientId": cur_id,
-                "creationTimestamp": -1,
+                "creationTimestamp": "-1",
                 "deleted": False,
                 "lastModifiedTimestamp": "0",
                 "playlistId": playlist_id,
@@ -136,7 +170,7 @@ def build_add_tracks(playlist_id, track_ids):
 
         prev_id = cur_id
         cur_id = next_id
-        next_id = str(uuid.uuid4())
+        next_id = str(uuid.uuid1())
     return mutations
 
 
@@ -147,8 +181,9 @@ def build_create_playlist(name, public):
             "deleted": False,
             "lastModifiedTimestamp": 0,
             "name": name,
+            "description": "",
             "type": "USER_GENERATED",
-            "accessControlled": public,
+            "shareState": "PUBLIC" if public else "PRIVATE",
         }
     }]
 
@@ -164,3 +199,26 @@ def parse_auth_response(s):
         k, v = line.split("=", 1)
         res[k] = v
     return res
+
+
+def _get_android_id():
+    mac_int = getmac()
+    if (mac_int >> 40) % 2:
+        raise OSError("a valid MAC could not be determined."
+                      " Provide an android_id (and be"
+                      " sure to provide the same one on future runs).")
+
+    android_id = _create_mac_string(mac_int)
+    android_id = android_id.replace(':', '')
+    return android_id
+
+
+def _create_mac_string(num, splitter=':'):
+    mac = hex(num)[2:]
+    if mac[-1] == 'L':
+        mac = mac[:-1]
+    pad = max(12 - len(mac), 0)
+    mac = '0' * pad + mac
+    mac = splitter.join([mac[x:x + 2] for x in range(0, 12, 2)])
+    mac = mac.upper()
+    return mac

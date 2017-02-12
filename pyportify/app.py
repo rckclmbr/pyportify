@@ -238,7 +238,7 @@ def search_gm_track(request, g, sp_query):
             gm_log_found(sp_query)
             yield from emit_added_event(request, True,
                                         sp_query.playlist_uri, search_query)
-            return track['nid']
+            return track.get('storeId')
 
         gm_log_not_found(sp_query)
         yield from emit_added_event(request, False,
