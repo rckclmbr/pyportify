@@ -63,10 +63,19 @@ before_install:
       brew unlink pyenv;
       brew install pyenv;
 
-      echo Installing pyenv shims...;
-      eval "$(pyenv init -)";
+      echo Installing git...;
+      brew unlink git;
+      brew install git;
 
-      new_python_version="3.5.1";
+      echo Installing virtualenv...;
+      brew unlink virtualenv;
+      brew install virtualenv;
+
+      echo Installing pyenv shims...;
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)";
+
+      new_python_version="3.5.0";
 
       echo "Installing Python${new_python_version}...";
       env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install ${new_python_version};
