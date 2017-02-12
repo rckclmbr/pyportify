@@ -69,7 +69,7 @@ before_install:
       new_python_version="3.5.0";
 
       echo "Installing Python${new_python_version}...";
-      env PYTHON_CONFIGURE_OPTS="--enable-shared --enable-framework" pyenv install ${new_python_version};
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install ${new_python_version};
       pyenv versions;
 
       echo "Making Python${new_python_version} the global python...";
