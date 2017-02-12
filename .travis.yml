@@ -10,7 +10,7 @@ matrix:
           before_install:
             - "brew update"
             - "brew install python3 pandoc"
-            - "sudo pip3 install pyinstaller tox"
+            - "sudo pip3 install pyinstaller==3.1.1 tox"
             - "sudo pip3 install -r requirements.txt"
             - "pandoc -f markdown -t rst -o README.rst README.md"
           install: 
