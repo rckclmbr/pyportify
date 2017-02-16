@@ -3,6 +3,7 @@ import asyncio
 from asyncio.locks import Semaphore
 import json
 import ssl
+from collections import OrderedDict
 
 import aiohttp
 import certifi
@@ -11,6 +12,7 @@ import sys
 
 from aiohttp import web, ClientSession
 from aiohttp.web import json_response
+from requests.packages.urllib3.connectionpool import xrange
 
 from pyportify.middlwares import IndexMiddleware
 from pyportify.spotify import SpotifyClient, SpotifyQuery
@@ -132,6 +134,10 @@ def spotify_playlists(request):
             "data": ret_playlists
         })
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 @asyncio.coroutine
 def transfer_playlists(request, s, g, sp_playlist_uris):
@@ -173,13 +179,19 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
         if len(gm_track_ids) > 0:
             uprint("Creating in Google Music... ", end='')
             sys.stdout.flush()
-            playlist_id = yield from g.create_playlist(sp_playlist['name'])
-            yield from g.add_songs_to_playlist(playlist_id, gm_track_ids)
+            gm_track_ids_without_duplicated = list(OrderedDict.fromkeys(gm_track_ids))
+            tracks_lists = list(chunks(gm_track_ids_without_duplicated, 999))
+            # Creates a playlist for each 999 tracks (GM has a 1000 tracks playlist limit)
+            for key, track_list in enumerate(tracks_lists):
+                playlist_title = sp_playlist['name']
+                if len(tracks_lists) > 1:
+                    playlist_title = '{0} {1}/{2}'.format(playlist_title, str(key+1), str(len(tracks_lists)))
+                playlist_id = yield from g.create_playlist(playlist_title)
+                created = yield from g.add_songs_to_playlist(playlist_id, track_list)
             uprint("Done")
 
         yield from emit_playlist_ended(request, playlist_json)
     yield from emit_all_done(request)
-
 
 @asyncio.coroutine
 def emit(request, event, data):
