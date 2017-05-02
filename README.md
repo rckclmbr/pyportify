@@ -82,7 +82,7 @@ $ docker run -t -i --rm -p 3132:3132 rckclmbr/pyportify
 
 or
 
-$ docker run -t -i --rm rckclmbr/pyportify /ve/bin/pyportify-copyall
+$ docker run -t -i --rm rckclmbr/pyportify /usr/local/bin/pyportify-copyall
 ```
 
 License
