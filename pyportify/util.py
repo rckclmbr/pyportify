@@ -1,3 +1,4 @@
+import itertools
 import sys
 
 
@@ -11,3 +12,12 @@ def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
                 .encode(enc, errors='backslashreplace') \
                 .decode(enc)
         print(*map(f, objects), sep=sep, end=end, file=file)
+
+
+def grouper(iterable, n):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk

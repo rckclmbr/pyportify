@@ -42,14 +42,11 @@ class Mobileclient(object):
 
     @asyncio.coroutine
     def search_all_access(self, search_query, max_results=30):
-        params = {
+        data = yield from self._http_get("/query", {
             "q": search_query,
             "max-results": max_results,
             'ct': '1,2,3,4,6,7,8,9',
-        }
-        query = encode(params)
-        url = "/query?{0}".format(query)
-        data = yield from self._http_get(url)
+        })
         return data
 
     @asyncio.coroutine
@@ -96,21 +93,24 @@ class Mobileclient(object):
         return added_ids
 
     @asyncio.coroutine
-    def _http_get(self, url):
+    def _http_get(self, url, params):
         headers = {
             "Authorization": "GoogleLogin auth={0}".format(self.token),
             "Content-type": "application/json",
         }
 
+        merged_params = params.copy()
+        merged_params.update({
+            'tier': 'aa',
+            'hl': 'en_US',
+            'dv': 0,
+        })
+
         res = yield from self.session.request(
             'GET',
             FULL_SJ_URL + url,
             headers=headers,
-            params={
-                'tier': 'aa',
-                'hl': 'en_US',
-                'dv': 0,
-            }
+            params=merged_params,
         )
         data = yield from res.json()
         return data

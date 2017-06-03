@@ -15,7 +15,7 @@ from aiohttp.web import json_response
 from pyportify.middlwares import IndexMiddleware
 from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
-from pyportify.util import uprint
+from pyportify.util import uprint, grouper
 
 IS_BUNDLED = getattr(sys, 'frozen', False)
 
@@ -173,8 +173,13 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
         if len(gm_track_ids) > 0:
             uprint("Creating in Google Music... ", end='')
             sys.stdout.flush()
-            playlist_id = yield from g.create_playlist(sp_playlist['name'])
-            yield from g.add_songs_to_playlist(playlist_id, gm_track_ids)
+            for i, sub_gm_track_ids in enumerate(grouper(gm_track_ids, 1000)):
+                name = sp_playlist['name']
+                if i > 0:
+                    name = "{} ({})".format(name, i+1)
+                playlist_id = yield from g.create_playlist(name)
+                yield from \
+                    g.add_songs_to_playlist(playlist_id, sub_gm_track_ids)
             uprint("Done")
 
         yield from emit_playlist_ended(request, playlist_json)
