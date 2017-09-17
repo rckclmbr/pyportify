@@ -13,9 +13,7 @@ By using Pyportify you may violate both Spotify's and Google's Terms of Service.
 you are using Pyportify on your own risk. The author does not accept liability (as far as permitted by law) for any loss arising from any use of this tool.
 If you choose not to agree to these terms, then you may not use this tool.
 
-
-
-If you are unable to sign in to your Google account, turn on access for less secure apps here: https://www.google.com/settings/security/lesssecureapps/
+If you are unable to sign in to your Google account, try using Google App Passwords: https://security.google.com/settings/security/apppasswords
 
 Download
 --------
