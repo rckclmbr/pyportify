@@ -236,9 +236,10 @@ def emit_all_done(request):
 @asyncio.coroutine
 def search_gm_track(request, g, sp_query):
     with (yield from semaphore):
+        track = None
         search_query = sp_query.search_query()
-
-        track = yield from g.find_best_track(search_query)
+        if search_query:
+            track = yield from g.find_best_track(search_query)
         if track:
             gm_log_found(sp_query)
             yield from emit_added_event(request, True,

@@ -29,6 +29,7 @@ with open(requirements_txt) as reqs:
                )
     ]
 
+
 def get_version(filename):
     with open(filename) as r:
         metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", r.read()))

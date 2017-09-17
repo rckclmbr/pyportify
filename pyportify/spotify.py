@@ -11,11 +11,15 @@ class SpotifyQuery():
         self.track_count = track_count
 
     def search_query(self):
-        if "artists" in self.sp_track['track']:
-            sp_artist = self.sp_track['track']['artists'][0]
+        track = self.sp_track.get("track")
+        if not track:
+            return None
+
+        if "artists" in track:
+            sp_artist = track['artists'][0]
             search_query = "{0} - {1}".format(
                 sp_artist['name'],
-                self.sp_track['track']['name'],
+                track['name'],
             )
         else:
             search_query = "{0}".format(self.sp_track['name'])
