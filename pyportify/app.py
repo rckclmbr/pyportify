@@ -12,7 +12,7 @@ import sys
 from aiohttp import web, ClientSession
 from aiohttp.web import json_response
 
-from pyportify.middlwares import IndexMiddleware
+from pyportify.middlewares import IndexMiddleware
 from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
 from pyportify.util import uprint, grouper
@@ -255,8 +255,8 @@ def search_gm_track(request, g, sp_query):
 @asyncio.coroutine
 def wshandler(request):
     resp = web.WebSocketResponse()
-    ok, protocol = resp.can_start(request)
-    if not ok:
+    ws_ready = resp.can_prepare(request)
+    if not ws_ready.ok:
         raise Exception("Couldn't start websocket")
 
     yield from resp.prepare(request)
