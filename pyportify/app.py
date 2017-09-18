@@ -162,9 +162,10 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
 
         tasks = []
         for i, sp_track in enumerate(sp_playlist_tracks):
-            query = SpotifyQuery(i, sp_playlist_uri, sp_track, track_count)
-            future = search_gm_track(request, g, query)
-            tasks.append(future)
+            if sp_track['track'] is not None:
+                query = SpotifyQuery(i, sp_playlist_uri, sp_track, track_count)
+                future = search_gm_track(request, g, query)
+                tasks.append(future)
 
         done = yield from asyncio.gather(*tasks)
         gm_track_ids = [i for i in done if i is not None]
