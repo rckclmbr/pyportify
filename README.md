@@ -20,11 +20,11 @@ Download
 
 Windows:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.3.16/pyportify.zip
+https://github.com/rckclmbr/pyportify/releases/download/v0.4.0/pyportify.zip
 
 OSX:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.3.16/pyportify.dmg
+https://github.com/rckclmbr/pyportify/releases/download/v0.4.0/pyportify.dmg
 
 Install from pypi
 -----------------
@@ -67,8 +67,8 @@ Alternatively, you can copy all playlists easily using the ```pyportify-copyall`
 $ pyportify-copyall
 Enter Google email address: example@gmail.com
 Enter Google password:
-Enter Spotify username: spotifyuser
-Enter Spotify password:
+Go to https://developer.spotify.com/web-api/console/get-playlist-tracks/ and get an oauth token
+Enter Spotify oauth token: <access token>
 (transfer music)
 ...
 ```
