@@ -2,13 +2,20 @@
 
 block_cipher = None
 
+HIDDEN_IMPORTS = [
+    'aiohttp',
+    'pyportify',
+    'pyportify.middlewares',
+    'pyportify.server',
+]
+
 a = Analysis(['pyportify/server.py'],
              pathex=['/Users/jbraeg/projects/pyportify'],
              binaries=None,
              datas=[
-                ('pyportify/static', 'pyportify'), 
+                ('pyportify/static', 'pyportify'),
              ],
-             hiddenimports=['aiohttp'],
+             hiddenimports=HIDDEN_IMPORTS,
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -31,7 +38,7 @@ a1 = Analysis(['pyportify/copy_all.py'],
              pathex=['/Users/jbraeg/projects/pyportify'],
              binaries=None,
              datas=None,
-             hiddenimports=['pyportify', 'pyportify.server'],
+             hiddenimports=HIDDEN_IMPORTS,
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

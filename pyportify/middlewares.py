@@ -2,10 +2,8 @@ import asyncio
 
 
 def IndexMiddleware(index='index.html'):
-    @asyncio.coroutine
-    def middleware_factory(app, handler):
-        @asyncio.coroutine
-        def index_handler(request):
+    async def middleware_factory(app, handler):
+        async def index_handler(request):
             try:
                 filename = request.match_info['filename']
                 if not filename:
@@ -15,7 +13,7 @@ def IndexMiddleware(index='index.html'):
                 request.match_info['filename'] = filename
             except KeyError:
                 pass
-            ret = yield from handler(request)
+            ret = await handler(request)
             return ret
         return index_handler
     return middleware_factory

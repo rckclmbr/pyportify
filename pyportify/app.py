@@ -1,4 +1,3 @@
-
 import asyncio
 from asyncio.locks import Semaphore
 import json
@@ -38,17 +37,16 @@ user_scope = UserScope()
 semaphore = Semaphore(20)
 
 
-@asyncio.coroutine
-def google_login(request):
+async def google_login(request):
 
-    data = yield from request.json()
+    data = await request.json()
 
     email = data.get("email")
     password = data.get("password")
 
     with ClientSession() as session:
         g = Mobileclient(session)
-        token = yield from g.login(email, password)
+        token = await g.login(email, password)
         if not token:
             return json_response(dict(
                 status=400,
@@ -61,15 +59,14 @@ def google_login(request):
     ))
 
 
-@asyncio.coroutine
-def spotify_login(request):
+async def spotify_login(request):
 
-    data = yield from request.json()
+    data = await request.json()
 
     oauth_token = data.get("oauthToken")
     with ClientSession() as session:
         c = SpotifyClient(session, oauth_token)
-        logged_in = yield from c.loggedin()
+        logged_in = await c.loggedin()
         if not logged_in:
             return json_response(dict(
                 status=400,
@@ -83,10 +80,9 @@ def spotify_login(request):
     ))
 
 
-@asyncio.coroutine
-def transfer_start(request):
+async def transfer_start(request):
 
-    lists = yield from request.json()
+    lists = await request.json()
     lists = [l['uri'] for l in lists]
 
     if not user_scope.google_token:
@@ -114,18 +110,17 @@ def transfer_start(request):
         g = Mobileclient(session, user_scope.google_token)
         s = SpotifyClient(session, user_scope.spotify_token)
 
-        yield from transfer_playlists(request, s, g, lists)
+        await transfer_playlists(request, s, g, lists)
         return json_response({
             "status": 200,
             "message": "transfer will start.",
         })
 
 
-@asyncio.coroutine
-def spotify_playlists(request):
+async def spotify_playlists(request):
     with ClientSession() as session:
         c = SpotifyClient(session, user_scope.spotify_token)
-        ret_playlists = yield from c.fetch_spotify_playlists()
+        ret_playlists = await c.fetch_spotify_playlists()
         return json_response({
             "status": 200,
             "message": "ok",
@@ -133,11 +128,10 @@ def spotify_playlists(request):
         })
 
 
-@asyncio.coroutine
-def transfer_playlists(request, s, g, sp_playlist_uris):
+async def transfer_playlists(request, s, g, sp_playlist_uris):
     for sp_playlist_uri in sp_playlist_uris:
-        sp_playlist = yield from s.fetch_playlist(sp_playlist_uri)
-        sp_playlist_tracks = yield from s.fetch_playlist_tracks(
+        sp_playlist = await s.fetch_playlist(sp_playlist_uri)
+        sp_playlist_tracks = await s.fetch_playlist_tracks(
             sp_playlist_uri)
 
         track_count = len(sp_playlist_tracks)
@@ -153,11 +147,11 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
             "name": sp_playlist['name'],
         }
 
-        yield from emit_playlist_length(request, track_count)
-        yield from emit_playlist_started(request, playlist_json)
+        await emit_playlist_length(request, track_count)
+        await emit_playlist_started(request, playlist_json)
 
         if not sp_playlist_tracks:
-            yield from emit_playlist_ended(request, playlist_json)
+            await emit_playlist_ended(request, playlist_json)
             return
 
         tasks = []
@@ -166,7 +160,7 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
             future = search_gm_track(request, g, query)
             tasks.append(future)
 
-        done = yield from asyncio.gather(*tasks)
+        done = await asyncio.gather(*tasks)
         gm_track_ids = [i for i in done if i is not None]
 
         # Once we have all the gm_trackids, add them
@@ -177,17 +171,16 @@ def transfer_playlists(request, s, g, sp_playlist_uris):
                 name = sp_playlist['name']
                 if i > 0:
                     name = "{} ({})".format(name, i+1)
-                playlist_id = yield from g.create_playlist(name)
-                yield from \
+                playlist_id = await g.create_playlist(name)
+                await \
                     g.add_songs_to_playlist(playlist_id, sub_gm_track_ids)
             uprint("Done")
 
-        yield from emit_playlist_ended(request, playlist_json)
-    yield from emit_all_done(request)
+        await emit_playlist_ended(request, playlist_json)
+    await emit_all_done(request)
 
 
-@asyncio.coroutine
-def emit(request, event, data):
+async def emit(request, event, data):
     if request is None:
         # uprint("Not emitting {0}".format(event))
         return
@@ -196,9 +189,8 @@ def emit(request, event, data):
         ws.send_str(json.dumps({'eventName': event, 'eventData': data}))
 
 
-@asyncio.coroutine
-def emit_added_event(request, found, sp_playlist_uri, search_query):
-    yield from emit(request, "gmusic", {
+async def emit_added_event(request, found, sp_playlist_uri, search_query):
+    await emit(request, "gmusic", {
         "type": "added" if found else "not_added",
         "data": {
             "spotify_track_uri": sp_playlist_uri,
@@ -209,61 +201,55 @@ def emit_added_event(request, found, sp_playlist_uri, search_query):
     })
 
 
-@asyncio.coroutine
-def emit_playlist_length(request, track_count):
-    yield from emit(request, "portify",
+async def emit_playlist_length(request, track_count):
+    await emit(request, "portify",
                     {"type": "playlist_length",
                      "data": {"length": track_count}})
 
 
-@asyncio.coroutine
-def emit_playlist_started(request, playlist_json):
-    yield from emit(request, "portify",
+async def emit_playlist_started(request, playlist_json):
+    await emit(request, "portify",
                     {"type": "playlist_started", "data": playlist_json})
 
 
-@asyncio.coroutine
-def emit_playlist_ended(request, playlist_json):
-    yield from emit(request, "portify",
+async def emit_playlist_ended(request, playlist_json):
+    await emit(request, "portify",
                     {"type": "playlist_ended", "data": playlist_json})
 
 
-@asyncio.coroutine
-def emit_all_done(request):
-    yield from emit(request, "portify", {"type": "all_done", "data": None})
+async def emit_all_done(request):
+    await emit(request, "portify", {"type": "all_done", "data": None})
 
 
-@asyncio.coroutine
-def search_gm_track(request, g, sp_query):
-    with (yield from semaphore):
+async def search_gm_track(request, g, sp_query):
+    with (await semaphore):
         track = None
         search_query = sp_query.search_query()
         if search_query:
-            track = yield from g.find_best_track(search_query)
+            track = await g.find_best_track(search_query)
         if track:
             gm_log_found(sp_query)
-            yield from emit_added_event(request, True,
+            await emit_added_event(request, True,
                                         sp_query.playlist_uri, search_query)
             return track.get('storeId')
 
         gm_log_not_found(sp_query)
-        yield from emit_added_event(request, False,
+        await emit_added_event(request, False,
                                     sp_query.playlist_uri, search_query)
         return None
 
 
-@asyncio.coroutine
-def wshandler(request):
+async def wshandler(request):
     resp = web.WebSocketResponse()
     ws_ready = resp.can_prepare(request)
     if not ws_ready.ok:
         raise Exception("Couldn't start websocket")
 
-    yield from resp.prepare(request)
+    await resp.prepare(request)
     request.app['sockets'].append(resp)
 
     while True:
-        msg = yield from resp.receive()
+        msg = await resp.receive()
 
         if msg.tp == web.MsgType.text:
             pass
@@ -284,8 +270,7 @@ def gm_log_not_found(sp_query):
            sp_query.i+1, sp_query.track_count, sp_query.search_query()))
 
 
-@asyncio.coroutine
-def setup(loop):
+async def setup(loop):
     app1 = web.Application(loop=loop, middlewares=[IndexMiddleware()])
     app1['sockets'] = []
     app1.router.add_route('POST', '/google/login', google_login)
@@ -297,7 +282,7 @@ def setup(loop):
 
     handler1 = app1.make_handler()
 
-    yield from loop.create_server(handler1, '0.0.0.0', 3132)
+    await loop.create_server(handler1, '0.0.0.0', 3132)
 
     uprint("Listening on http://0.0.0.0:3132")
     uprint("Please open your browser window to http://localhost:3132")

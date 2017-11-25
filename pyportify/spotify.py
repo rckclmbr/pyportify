@@ -36,17 +36,15 @@ class SpotifyClient(object):
         self.session = session
         self.token = token
 
-    @asyncio.coroutine
-    def loggedin(self):
-        playlists = yield from self._http_get(
+    async def loggedin(self):
+        playlists = await self._http_get(
             'https://api.spotify.com/v1/me/playlists',
         )
         if "error" in playlists:
             return False
         return True
 
-    @asyncio.coroutine
-    def fetch_spotify_playlists(self):
+    async def fetch_spotify_playlists(self):
         ret_playlists = [{
             "name": "Saved Tracks",
             "uri": "saved",
@@ -54,31 +52,28 @@ class SpotifyClient(object):
         }]
 
         url = 'https://api.spotify.com/v1/me/playlists'
-        playlists = yield from self._http_get_all(url)
+        playlists = await self._http_get_all(url)
         ret_playlists.extend(playlists)
         return ret_playlists
 
-    @asyncio.coroutine
-    def _http_get_all(self, url):
+    async def _http_get_all(self, url):
         ret = []
         while True:
-            data = yield from self._http_get(url)
+            data = await self._http_get(url)
             url = data['next']
             ret.extend(data['items'])
             if url is None:
                 break
         return ret
 
-    @asyncio.coroutine
-    def fetch_saved_tracks(self):
+    async def fetch_saved_tracks(self):
         url = 'https://api.spotify.com/v1/me/tracks'
-        tracks = yield from self._http_get_all(url)
+        tracks = await self._http_get_all(url)
         return tracks
 
-    @asyncio.coroutine
-    def fetch_playlist_tracks(self, uri):
+    async def fetch_playlist_tracks(self, uri):
         if uri == 'saved':
-            ret = yield from self.fetch_saved_tracks()
+            ret = await self.fetch_saved_tracks()
             return ret
 
         # spotify:user:<user_id>:playlist:<playlist_id>
@@ -88,11 +83,10 @@ class SpotifyClient(object):
 
         url = 'https://api.spotify.com/v1/users/{0}/playlists/{1}/tracks' \
             .format(user_id, playlist_id)
-        ret = yield from self._http_get_all(url)
+        ret = await self._http_get_all(url)
         return ret
 
-    @asyncio.coroutine
-    def fetch_playlist(self, uri):
+    async def fetch_playlist(self, uri):
         if uri == 'saved':
             return {
                 'name': 'Saved Tracks',
@@ -106,22 +100,21 @@ class SpotifyClient(object):
             user_id,
             playlist_id,
         )
-        ret = yield from self._http_get(url)
+        ret = await self._http_get(url)
         return ret
 
-    @asyncio.coroutine
-    def _http_get(self, url):
+    async def _http_get(self, url):
         headers = {
             'Authorization': 'Bearer {0}'.format(self.token),
             "Content-type": "application/json",
         }
-        res = yield from self.session.request(
+        res = await self.session.request(
             'GET',
             url,
             headers=headers,
             skip_auto_headers=['Authorization'],
         )
-        data = yield from res.json()
+        data = await res.json()
         if "error" in data:
             raise Exception("Error: {0}, url: {1}".format(data, url))
         return data

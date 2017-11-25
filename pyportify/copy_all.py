@@ -23,8 +23,7 @@ OAUTH_URL = \
     "https://developer.spotify.com/web-api/console/get-playlist-tracks/"
 
 
-@asyncio.coroutine
-def start():
+async def start():
 
     sslcontext = ssl.create_default_context(cafile=certifi.where())
     conn = aiohttp.TCPConnector(ssl_context=sslcontext)
@@ -36,7 +35,7 @@ def start():
 
         g = Mobileclient(session)
 
-        logged_in = yield from g.login(google_email, google_pass)
+        logged_in = await g.login(google_email, google_pass)
         if not logged_in:
             uprint("Invalid Google username/password")
             sys.exit(1)
@@ -46,14 +45,14 @@ def start():
 
         s = SpotifyClient(session, spotify_token)
 
-        logged_in = yield from s.loggedin()
+        logged_in = await s.loggedin()
         if not logged_in:
             uprint("Invalid Spotify token")
             sys.exit(1)
 
-        playlists = yield from s.fetch_spotify_playlists()
+        playlists = await s.fetch_spotify_playlists()
         playlists = [l['uri'] for l in playlists]
-        yield from app.transfer_playlists(None, s, g, playlists)
+        await app.transfer_playlists(None, s, g, playlists)
 
 
 def main():

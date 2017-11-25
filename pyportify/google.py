@@ -22,8 +22,7 @@ class Mobileclient(object):
         self.token = token
         self.session = session
 
-    @asyncio.coroutine
-    def login(self, username, password):
+    async def login(self, username, password):
         android_id = _get_android_id()
         res = gpsoauth.perform_master_login(username, password, android_id)
 
@@ -40,22 +39,20 @@ class Mobileclient(object):
         self.token = res["Auth"]
         return self.token
 
-    @asyncio.coroutine
-    def search_all_access(self, search_query, max_results=30):
-        data = yield from self._http_get("/query", {
+    async def search_all_access(self, search_query, max_results=30):
+        data = await self._http_get("/query", {
             "q": search_query,
             "max-results": max_results,
             'ct': '1,2,3,4,6,7,8,9',
         })
         return data
 
-    @asyncio.coroutine
-    def find_best_track(self, search_query):
+    async def find_best_track(self, search_query):
         track = None
         for i in range(0, 2):
-            data = yield from self.search_all_access(search_query)
+            data = await self.search_all_access(search_query)
             if 'suggestedQuery' in data:
-                data = yield from self.search_all_access(
+                data = await self.search_all_access(
                     data['suggestedQuery'])
             if "entries" not in data:
                 continue
@@ -67,33 +64,29 @@ class Mobileclient(object):
                 break
         return track
 
-    @asyncio.coroutine
-    def fetch_playlists(self):
-        data = yield from self._http_post("/playlistfeed", {})
+    async def fetch_playlists(self):
+        data = await self._http_post("/playlistfeed", {})
         # TODO: paging
         return data
 
-    @asyncio.coroutine
-    def create_playlist(self, name, public=False):
+    async def create_playlist(self, name, public=False):
         mutations = build_create_playlist(name, public)
-        data = yield from self._http_post("/playlistbatch", {
+        data = await self._http_post("/playlistbatch", {
             "mutations": mutations,
         })
         res = data["mutate_response"]
         playlist_id = res[0]["id"]
         return playlist_id
 
-    @asyncio.coroutine
-    def add_songs_to_playlist(self, playlist_id, track_ids):
+    async def add_songs_to_playlist(self, playlist_id, track_ids):
         data = {
             "mutations": build_add_tracks(playlist_id, track_ids),
         }
-        res = yield from self._http_post('/plentriesbatch', data)
+        res = await self._http_post('/plentriesbatch', data)
         added_ids = [e['id'] for e in res['mutate_response']]
         return added_ids
 
-    @asyncio.coroutine
-    def _http_get(self, url, params):
+    async def _http_get(self, url, params):
         headers = {
             "Authorization": "GoogleLogin auth={0}".format(self.token),
             "Content-type": "application/json",
@@ -106,23 +99,22 @@ class Mobileclient(object):
             'dv': 0,
         })
 
-        res = yield from self.session.request(
+        res = await self.session.request(
             'GET',
             FULL_SJ_URL + url,
             headers=headers,
             params=merged_params,
         )
-        data = yield from res.json()
+        data = await res.json()
         return data
 
-    @asyncio.coroutine
-    def _http_post(self, url, data):
+    async def _http_post(self, url, data):
         data = json.dumps(data)
         headers = {
             "Authorization": "GoogleLogin auth={0}".format(self.token),
             "Content-type": "application/json",
         }
-        res = yield from self.session.request(
+        res = await self.session.request(
             'POST',
             FULL_SJ_URL + url,
             data=data,
@@ -134,7 +126,7 @@ class Mobileclient(object):
                 'alt': 'json',
             }
         )
-        ret = yield from res.json()
+        ret = await res.json()
         return ret
 
 

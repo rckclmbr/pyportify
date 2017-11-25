@@ -3,23 +3,14 @@ matrix:
         - os: osx
           language: objective-c
           python:
-            - "3.5"
+            - "3.6"
           sudo: required
           env:
-            - TOXENV=py35
+            - TOXENV=py36
           install:
             - "PYTHONPATH=. pyinstaller --onefile pyportify.spec"
             - "hdiutil create dist/pyportify.dmg -srcfolder dist/ -ov"
           deploy:
-          #  - provider: s3
-          #    access_key_id:
-          #      secure: "MYYo6qxwsOPiC7NDuDRyJB79Eo4QMsvDRokdD8uHoPcf9O5wTTKnqZDLZeeQhUzOrTcSuYCBdDR2Nxu+G0A9LLm2o8Hi+bTofNxl3GOXFIxHMo/Ra80cuweOmsQwpKpKT4ejm28f5cACWAL8qBebkPlBgM3Q6H/cC0aHB/patO4="
-          #    secret_access_key:
-          #      secure: "CV4xHW1+BvewQU6jQBiYikhxwuGkXrUxuL0gQQUV63WL1eD7lQVg8GE0b1mhUbtw047DHPgbrTQK5jaao/GBjO6ydXkJCyN+LncTzJhbekA7xWOdvjPlvNDOib2K8UKWyxlPCyuzZfKx9w+HRt5CWCBVwvTdmTGhx5KSpYWEpGQ="
-          #    bucket: "pyportify"
-          #    skip_cleanup: true
-          #    acl: public_read
-          #    local_dir: dist
             - provider: releases
               api_key:
                 secure: SXoKAyll1TtFrQeOS5i65tzZLdZlXx5jEOnL3tlblmgcEn0sD4iILV/K/qv8KmeE8biBIdbtcqNJPh65covL8Yidaz211Hc4/MHhBU+rfqnrN0EcPR53/zmUgSbzWl7p62zvHdMSmS/iKQKT6Kv3pvyTEDL35oVX8lx0ckzcjkY
@@ -38,9 +29,9 @@ matrix:
                 repo: rckclmbr/pyportify
                 tags: true
         - os: linux
-          python: "3.4"
+          python: "3.6"
           env:
-            - TOXENV=py34
+            - TOXENV=py36
           language: python
           sudo: required
           before_install:
@@ -50,8 +41,8 @@ matrix:
             - "pandoc -f markdown -t rst -o README.rst README.md"
 before_install:
 
-  # Install python 3.5.0 on OS X
-  # Workaround for Tavis's current lack of official support for Python on OS X
+  # Install python 3.6.3 on OS X
+  # Workaround for Travis's current lack of official support for Python on OS X
   # Reference https://github.com/travis-ci/travis-ci/issues/2312
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       echo "TRAVIS_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION";
@@ -66,7 +57,7 @@ before_install:
       echo Installing pyenv shims...;
       eval "$(pyenv init -)"
 
-      new_python_version="3.5.0";
+      new_python_version="3.6.3";
 
       echo "Installing Python${new_python_version}...";
       env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install ${new_python_version};
@@ -85,7 +76,7 @@ before_install:
       brew install pandoc;
 
       echo Installing package dependencies...;
-      pip3 install pyinstaller==3.1.1 tox;
+      pip3 install pyinstaller==3.3 tox;
       pip3 install -r requirements.txt;
       pandoc -f markdown -t rst -o README.rst README.md;
     fi
