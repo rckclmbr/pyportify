@@ -1,5 +1,3 @@
-import asyncio
-
 
 def IndexMiddleware(index='index.html'):
     async def middleware_factory(app, handler):

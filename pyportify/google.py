@@ -3,7 +3,6 @@ import uuid
 import urllib
 from uuid import getnode as getmac
 
-import asyncio
 from pyportify import gpsoauth
 
 SJ_DOMAIN = "mclients.googleapis.com"
@@ -40,11 +39,9 @@ class Mobileclient(object):
         return self.token
 
     async def search_all_access(self, search_query, max_results=30):
-        data = await self._http_get("/query", {
-            "q": search_query,
-            "max-results": max_results,
-            'ct': '1,2,3,4,6,7,8,9',
-        })
+        data = await self._http_get("/query", {"q": search_query,
+                                               "max-results": max_results,
+                                               "ct": "1,2,3,4,6,7,8,9"})
         return data
 
     async def find_best_track(self, search_query):
@@ -71,61 +68,47 @@ class Mobileclient(object):
 
     async def create_playlist(self, name, public=False):
         mutations = build_create_playlist(name, public)
-        data = await self._http_post("/playlistbatch", {
-            "mutations": mutations,
-        })
+        data = await self._http_post("/playlistbatch",
+                                     {"mutations": mutations})
         res = data["mutate_response"]
         playlist_id = res[0]["id"]
         return playlist_id
 
     async def add_songs_to_playlist(self, playlist_id, track_ids):
-        data = {
-            "mutations": build_add_tracks(playlist_id, track_ids),
-        }
+        data = {"mutations": build_add_tracks(playlist_id, track_ids)}
         res = await self._http_post('/plentriesbatch', data)
         added_ids = [e['id'] for e in res['mutate_response']]
         return added_ids
 
     async def _http_get(self, url, params):
-        headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self.token),
-            "Content-type": "application/json",
-        }
+        headers = {"Authorization": "GoogleLogin auth={0}".format(self.token),
+                   "Content-type": "application/json"}
 
         merged_params = params.copy()
-        merged_params.update({
-            'tier': 'aa',
-            'hl': 'en_US',
-            'dv': 0,
-        })
+        merged_params.update({'tier': 'aa',
+                              'hl': 'en_US',
+                              'dv': 0})
 
-        res = await self.session.request(
-            'GET',
-            FULL_SJ_URL + url,
-            headers=headers,
-            params=merged_params,
-        )
+        res = await self.session.request('GET',
+                                         FULL_SJ_URL + url,
+                                         headers=headers,
+                                         params=merged_params)
         data = await res.json()
         return data
 
     async def _http_post(self, url, data):
         data = json.dumps(data)
-        headers = {
-            "Authorization": "GoogleLogin auth={0}".format(self.token),
-            "Content-type": "application/json",
-        }
+        headers = {"Authorization": "GoogleLogin auth={0}".format(self.token),
+                   "Content-type": "application/json"}
         res = await self.session.request(
             'POST',
             FULL_SJ_URL + url,
             data=data,
             headers=headers,
-            params={
-                'tier': 'aa',
-                'hl': 'en_US',
-                'dv': 0,
-                'alt': 'json',
-            }
-        )
+            params={'tier': 'aa',
+                    'hl': 'en_US',
+                    'dv': 0,
+                    'alt': 'json'})
         ret = await res.json()
         return ret
 
@@ -137,17 +120,13 @@ def build_add_tracks(playlist_id, track_ids):
     next_id = str(uuid.uuid1())
 
     for i, track_id in enumerate(track_ids):
-        details = {
-            "create": {
-                "clientId": cur_id,
-                "creationTimestamp": "-1",
-                "deleted": False,
-                "lastModifiedTimestamp": "0",
-                "playlistId": playlist_id,
-                "source": 1,
-                "trackId": track_id,
-            }
-        }
+        details = {"create": {"clientId": cur_id,
+                              "creationTimestamp": "-1",
+                              "deleted": False,
+                              "lastModifiedTimestamp": "0",
+                              "playlistId": playlist_id,
+                              "source": 1,
+                              "trackId": track_id}}
 
         if track_id.startswith("T"):
             details["create"]["source"] = 2  # AA track
@@ -168,16 +147,13 @@ def build_add_tracks(playlist_id, track_ids):
 
 def build_create_playlist(name, public):
     return [{
-        "create": {
-            "creationTimestamp": "-1",
-            "deleted": False,
-            "lastModifiedTimestamp": 0,
-            "name": name,
-            "description": "",
-            "type": "USER_GENERATED",
-            "shareState": "PUBLIC" if public else "PRIVATE",
-        }
-    }]
+        "create": {"creationTimestamp": "-1",
+                   "deleted": False,
+                   "lastModifiedTimestamp": 0,
+                   "name": name,
+                   "description": "",
+                   "type": "USER_GENERATED",
+                   "shareState": "PUBLIC" if public else "PRIVATE"}}]
 
 
 def parse_auth_response(s):

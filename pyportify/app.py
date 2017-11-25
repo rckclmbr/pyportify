@@ -51,12 +51,10 @@ async def google_login(request):
             return json_response(dict(
                 status=400,
                 message="login failed.",
-            ))
+                ))
         user_scope.google_token = token
-    return json_response(dict(
-        status=200,
-        message="login successful."
-    ))
+    return json_response({"status": 200,
+                          "message": "login successful."})
 
 
 async def spotify_login(request):
@@ -68,16 +66,12 @@ async def spotify_login(request):
         c = SpotifyClient(session, oauth_token)
         logged_in = await c.loggedin()
         if not logged_in:
-            return json_response(dict(
-                status=400,
-                message="login failed.",
-            ))
+            return json_response({"status": 400,
+                                  "message": "login failed."})
         user_scope.spotify_token = oauth_token
 
-    return json_response(dict(
-        status=200,
-        message="login successful."
-    ))
+    return json_response({"status": 200,
+                          "message": "login successful."})
 
 
 async def transfer_start(request):
@@ -86,22 +80,18 @@ async def transfer_start(request):
     lists = [l['uri'] for l in lists]
 
     if not user_scope.google_token:
-        return json_response({
-            "status": 401,
-            "message": "Google: not logged in.",
-        })
+        return json_response({"status": 401,
+                              "message": "Google: not logged in."})
 
     if not user_scope.spotify_token:
-        return json_response({
-            "status": 402,
-            "message": "Spotify: not logged in.",
-        })
+        return json_response({"status": 402,
+                              "message": "Spotify: not logged in."})
 
     if not lists:
         return json_response({
             "status": 403,
             "message": "Please select at least one playlist.",
-        })
+            })
 
     sslcontext = ssl.create_default_context(cafile=certifi.where())
     conn = aiohttp.TCPConnector(ssl_context=sslcontext)
@@ -111,21 +101,17 @@ async def transfer_start(request):
         s = SpotifyClient(session, user_scope.spotify_token)
 
         await transfer_playlists(request, s, g, lists)
-        return json_response({
-            "status": 200,
-            "message": "transfer will start.",
-        })
+        return json_response({"status": 200,
+                              "message": "transfer will start."})
 
 
 async def spotify_playlists(request):
     with ClientSession() as session:
         c = SpotifyClient(session, user_scope.spotify_token)
         ret_playlists = await c.fetch_spotify_playlists()
-        return json_response({
-            "status": 200,
-            "message": "ok",
-            "data": ret_playlists
-        })
+        return json_response({"status": 200,
+                              "message": "ok",
+                              "data": ret_playlists})
 
 
 async def transfer_playlists(request, s, g, sp_playlist_uris):
@@ -138,14 +124,12 @@ async def transfer_playlists(request, s, g, sp_playlist_uris):
         uprint(
             "Gathering tracks for playlist %s (%s)" %
             (sp_playlist['name'], track_count)
-        )
+            )
         playlist_json = {
-            "playlist": {
-                "uri": sp_playlist_uri,
-                "name": sp_playlist['name'],
-            },
+            "playlist": {"uri": sp_playlist_uri,
+                         "name": sp_playlist['name']},
             "name": sp_playlist['name'],
-        }
+            }
 
         await emit_playlist_length(request, track_count)
         await emit_playlist_started(request, playlist_json)
@@ -192,29 +176,26 @@ async def emit(request, event, data):
 async def emit_added_event(request, found, sp_playlist_uri, search_query):
     await emit(request, "gmusic", {
         "type": "added" if found else "not_added",
-        "data": {
-            "spotify_track_uri": sp_playlist_uri,
-            "spotify_track_name": search_query,
-            "found": found,
-            "karaoke": False,
-        }
-    })
+        "data": {"spotify_track_uri": sp_playlist_uri,
+                 "spotify_track_name": search_query,
+                 "found": found,
+                 "karaoke": False}})
 
 
 async def emit_playlist_length(request, track_count):
     await emit(request, "portify",
-                    {"type": "playlist_length",
-                     "data": {"length": track_count}})
+               {"type": "playlist_length",
+                "data": {"length": track_count}})
 
 
 async def emit_playlist_started(request, playlist_json):
     await emit(request, "portify",
-                    {"type": "playlist_started", "data": playlist_json})
+               {"type": "playlist_started", "data": playlist_json})
 
 
 async def emit_playlist_ended(request, playlist_json):
     await emit(request, "portify",
-                    {"type": "playlist_ended", "data": playlist_json})
+               {"type": "playlist_ended", "data": playlist_json})
 
 
 async def emit_all_done(request):
@@ -230,12 +211,12 @@ async def search_gm_track(request, g, sp_query):
         if track:
             gm_log_found(sp_query)
             await emit_added_event(request, True,
-                                        sp_query.playlist_uri, search_query)
+                                   sp_query.playlist_uri, search_query)
             return track.get('storeId')
 
         gm_log_not_found(sp_query)
         await emit_added_event(request, False,
-                                    sp_query.playlist_uri, search_query)
+                               sp_query.playlist_uri, search_query)
         return None
 
 

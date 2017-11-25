@@ -1,31 +1,15 @@
 import binascii
-
 import operator
-
-import math
-
 import sys
 
 from functools import reduce
 
 from .defaults import default_crypto_random
-
-try:
-    import gmpy
-except ImportError:
-    gmpy = None
-
 from . import exceptions
 
 
 '''Primitive functions extracted from the PKCS1 RFC'''
 
-def _pow(a, b, mod):
-    '''Exponentiation function using acceleration from gmpy if possible'''
-    if gmpy:
-        return long(pow(gmpy.mpz(a), gmpy.mpz(b), gmpy.mpz(mod)))
-    else:
-        return pow(a, b, mod)
 
 def integer_ceil(a, b):
     '''Return the ceil integer of a div b.'''
@@ -34,12 +18,14 @@ def integer_ceil(a, b):
         quanta += 1
     return quanta
 
+
 def integer_byte_size(n):
     '''Returns the number of bytes necessary to store the integer n.'''
     quanta, mod = divmod(integer_bit_size(n), 8)
     if mod or n == 0:
         quanta += 1
     return quanta
+
 
 def integer_bit_size(n):
     '''Returns the number of bits necessary to store the integer n.'''
@@ -50,6 +36,7 @@ def integer_bit_size(n):
         s += 1
         n >>= 1
     return s
+
 
 def bezout(a, b):
     '''Compute the bezout algorithm of a and b, i.e. it returns u, v, p such as:
@@ -76,6 +63,7 @@ def bezout(a, b):
         v = tmp
     return u, v, a
 
+
 def i2osp(x, x_len):
     '''Converts the integer x to its big-endian representation of length
        x_len.
@@ -90,6 +78,7 @@ def i2osp(x, x_len):
     x = binascii.unhexlify(h)
     return b'\x00' * int(x_len-len(x)) + x
 
+
 def os2ip(x):
     '''Converts the byte string x representing an integer reprented using the
        big-endian convient to an integer.
@@ -97,18 +86,21 @@ def os2ip(x):
     h = binascii.hexlify(x)
     return int(h, 16)
 
+
 def string_xor(a, b):
     '''Computes the XOR operator between two byte strings. If the strings are
        of different lengths, the result string is as long as the shorter.
     '''
     if sys.version_info[0] < 3:
-        return ''.join((chr(ord(x) ^ ord(y)) for (x,y) in zip(a,b)))
+        return ''.join((chr(ord(x) ^ ord(y)) for (x, y) in zip(a, b)))
     else:
         return bytes(x ^ y for (x, y) in zip(a, b))
+
 
 def product(*args):
     '''Computes the product of its arguments.'''
     return reduce(operator.__mul__, args)
+
 
 def get_nonzero_random_bytes(length, rnd=default_crypto_random):
     '''
@@ -118,23 +110,17 @@ def get_nonzero_random_bytes(length, rnd=default_crypto_random):
     result = []
     i = 0
     while i < length:
-        l = rnd.getrandbits(12*length)
-        s = i2osp(l, 3*length)
+        rnd = rnd.getrandbits(12*length)
+        s = i2osp(rnd, 3*length)
         s = s.replace('\x00', '')
         result.append(s)
         i += len(s)
     return (''.join(result))[:length]
 
+
 def constant_time_cmp(a, b):
     '''Compare two strings using constant time.'''
     result = True
-    for x, y in zip(a,b):
+    for x, y in zip(a, b):
         result &= (x == y)
     return result
-
-import textwrap
-
-def dump_hex(data):
-    if isinstance(data, basestring):
-        print('length', len(data))
-        print(textwrap.fill(''.join(['%s ' % x.encode('hex') for x in data]), 72))

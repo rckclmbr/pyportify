@@ -2,6 +2,7 @@ import hashlib
 
 from .primitives import integer_ceil, i2osp
 
+
 def mgf1(mgf_seed, mask_len, hash_class=hashlib.sha1):
     '''
        Mask Generation Function v1 from the PKCS#1 v2.0 standard.
@@ -20,5 +21,3 @@ def mgf1(mgf_seed, mask_len, hash_class=hashlib.sha1):
         C = i2osp(i, 4)
         T = T + hash_class(mgf_seed + C).digest()
     return T[:mask_len]
-
-

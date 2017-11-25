@@ -11,7 +11,7 @@ requirements_txt = os.path.join(basepath, "requirements.txt")
 try:
     import pypandoc
     long_description = pypandoc.convert_file('README.md', 'rst')
-    long_description = long_description.replace("\r","") # YOU  NEED THIS LINE
+    long_description = long_description.replace("\r", "")
 except (ImportError, OSError):
     print("Pandoc not found. Long_description conversion failure.")
     import io
@@ -22,12 +22,9 @@ except (ImportError, OSError):
 
 with open(requirements_txt) as reqs:
     install_requires = [
-        line for line in reqs.read().split('\n') \
-            if (line and
-                   not line.startswith('git+') and
-                   not line.startswith('--')
-               )
-    ]
+        line for line in reqs.read().split('\n')
+        if (line and not line.startswith('git+') and not line.startswith('--'))
+        ]
 
 
 def get_version(filename):
@@ -48,22 +45,12 @@ args = dict(
     description='App to transfer your spotify playlists to Google Play '
                 'Music',
     long_description=long_description,
-    classifiers=[
-        'Environment :: Web Environment',
-    ],
+    classifiers=['Environment :: Web Environment'],
     entry_points={
-        'console_scripts': [
-            'pyportify = pyportify.server:main',
-            'pyportify-copyall = pyportify.copy_all:main',
-        ],
-    },
-    data_files=(
-        ('', [
-        "LICENSE.txt",
-        ]),
-    ),
+        'console_scripts': ['pyportify = pyportify.server:main',
+                            'pyportify-copyall = pyportify.copy_all:main']},
+    data_files=(('', ["LICENSE.txt"]),),
     zip_safe=False,
-    install_requires=install_requires,
-)
+    install_requires=install_requires)
 
 setup(**args)

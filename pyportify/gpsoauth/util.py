@@ -5,9 +5,7 @@ PY3 = sys.version[0] == '3'
 
 
 def bytes_to_long(s):
-    if PY3:
-        return int.from_bytes(s, "big")
-    return long(s.encode('hex'), 16)
+    return int.from_bytes(s, "big")
 
 
 def long_to_bytes(lnum, padmultiple=1):

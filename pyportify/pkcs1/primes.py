@@ -15,7 +15,9 @@ DEFAULT_ITERATION = 1000
 
 USE_MILLER_RABIN = True
 
-def is_prime(n, rnd=default_pseudo_random, k=DEFAULT_ITERATION, algorithm=None):
+
+def is_prime(n, rnd=default_pseudo_random, k=DEFAULT_ITERATION,
+             algorithm=None):
     '''Test if n is a prime number
 
        m - the integer to test
@@ -45,12 +47,15 @@ def is_prime(n, rnd=default_pseudo_random, k=DEFAULT_ITERATION, algorithm=None):
         raise NotImplementedError
 
 
-def get_prime(size=128, rnd=default_crypto_random, k=DEFAULT_ITERATION, algorithm=None):
-    '''Generate a prime number of the giver size using the is_prime() helper function.
+def get_prime(size=128, rnd=default_crypto_random, k=DEFAULT_ITERATION,
+              algorithm=None):
+    '''Generate a prime number of the giver size using the is_prime() helper
+       function.
 
        size - size in bits of the prime, default to 128
        rnd - a random generator to use
-       k - the number of iteration to use for the probabilistic primality algorithms,
+       k - the number of iteration to use for the probabilistic primality
+           algorithms.
        algorithm - the name of the primality algorithm to use, default is the
        probabilistic Miller-Rabin algorithm.
 
@@ -64,6 +69,7 @@ def get_prime(size=128, rnd=default_crypto_random, k=DEFAULT_ITERATION, algorith
         if algorithm == 'gmpy-miller-rabin':
             return gmpy.next_prime(n)
 
+
 def jacobi(a, b):
     '''Calculates the value of the Jacobi symbol (a/b) where both a and b are
     positive integers, and b is odd
@@ -74,7 +80,8 @@ def jacobi(a, b):
     assert a > 0
     assert b > 0
 
-    if a == 0: return 0
+    if a == 0:
+        return 0
     result = 1
     while a > 1:
         if a & 1:
@@ -85,22 +92,22 @@ def jacobi(a, b):
             if (((b * b) - 1) >> 3) & 1:
                 result = -result
             a >>= 1
-    if a == 0: return 0
+    if a == 0:
+        return 0
     return result
+
 
 def jacobi_witness(x, n):
     '''Returns False if n is an Euler pseudo-prime with base x, and
     True otherwise.
     '''
-
     j = jacobi(x, n) % n
-
     f = pow(x, n >> 1, n)
+    return j != f
 
-    if j == f: return False
-    return True
 
-def randomized_primality_testing(n, rnd=default_crypto_random, k=DEFAULT_ITERATION):
+def randomized_primality_testing(n, rnd=default_crypto_random,
+                                 k=DEFAULT_ITERATION):
     '''Calculates whether n is composite (which is always correct) or
     prime (which is incorrect with error probability 2**-k)
 
@@ -120,9 +127,10 @@ def randomized_primality_testing(n, rnd=default_crypto_random, k=DEFAULT_ITERATI
 
     for _ in range(k):
         x = rnd.randint(0, n-1)
-        if jacobi_witness(x, n): return False
-
+        if jacobi_witness(x, n):
+            return False
     return True
+
 
 def miller_rabin(n, k, rnd=default_pseudo_random):
     '''
@@ -144,11 +152,11 @@ def miller_rabin(n, k, rnd=default_pseudo_random):
     while k:
         k = k - 1
         a = rnd.randint(2, n-2)
-        x = pow(a,d,n)
+        x = pow(a, d, n)
         if x == 1 or x == n - 1:
             continue
-        for r in xrange(1,s-1):
-            x = pow(x,2,n)
+        for r in range(1, s-1):
+            x = pow(x, 2, n)
             if x == 1:
                 return False
             if x == n - 1:
@@ -156,4 +164,3 @@ def miller_rabin(n, k, rnd=default_pseudo_random):
         else:
             return False
     return True
-

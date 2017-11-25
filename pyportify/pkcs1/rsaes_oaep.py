@@ -5,8 +5,9 @@ from . import exceptions
 from . import mgf
 from .defaults import default_crypto_random
 
+
 def encrypt(public_key, message, label=b'', hash_class=hashlib.sha1,
-        mgf=mgf.mgf1, seed=None, rnd=default_crypto_random):
+            mgf=mgf.mgf1, seed=None, rnd=default_crypto_random):
     '''Encrypt a byte message using a RSA public key and the OAEP wrapping
        algorithm,
 
@@ -48,9 +49,11 @@ def encrypt(public_key, message, label=b'', hash_class=hashlib.sha1,
     output = primitives.i2osp(c, k)
     return output
 
+
 def decrypt(private_key, message, label=b'', hash_class=hashlib.sha1,
-        mgf=mgf.mgf1):
-    '''Decrypt a byte message using a RSA private key and the OAEP wrapping algorithm,
+            mgf=mgf.mgf1):
+    '''Decrypt a byte message using a RSA private key and the OAEP wrapping
+       algorithm
 
        Parameters:
        public_key - an RSA public key
@@ -94,4 +97,3 @@ def decrypt(private_key, message, label=b'', hash_class=hashlib.sha1,
     if label_hash_prime != label_hash:
         raise exceptions.DecryptionError
     return m
-
