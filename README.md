@@ -20,11 +20,11 @@ Download
 
 Windows:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.4.0/pyportify.zip
+https://github.com/rckclmbr/pyportify/releases/download/v0.4.1/pyportify.zip
 
 OSX:
 
-https://github.com/rckclmbr/pyportify/releases/download/v0.4.0/pyportify.dmg
+https://github.com/rckclmbr/pyportify/releases/download/v0.4.1/pyportify.dmg
 
 Install from pypi
 -----------------
@@ -44,7 +44,7 @@ sudo apt-get install -y python3-pip
 sudo pip3 install pyportify
 ```
 
-Fedora 
+Fedora
 
 ```bash
 sudo yum check-update

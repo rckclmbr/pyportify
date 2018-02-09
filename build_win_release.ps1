@@ -23,7 +23,7 @@ function Build( $projectroot, $version, $pyroot ) {
     ZipFiles "$projectroot\pyportify.zip" "$projectroot\pyportify-$version"
 }
 
-$version = "0.4.0"
+$version = "0.4.1"
 
 $pyroot = "c:\Users\josh\virtualenvs\pyportify36\Scripts"
 $projectroot = $PSScriptRoot
