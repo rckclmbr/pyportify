@@ -1,26 +1,27 @@
 import urllib
 
+from pyportify.serializers import Track
+
 
 class SpotifyQuery():
 
     def __init__(self, i, sp_playlist_uri, sp_track, track_count):
+        self.track = Track.from_spotify(sp_track.get("track", {}))
         self.i = i
         self.playlist_uri = sp_playlist_uri
-        self.sp_track = sp_track
         self.track_count = track_count
 
     def search_query(self):
-        track = self.sp_track.get("track")
-        if not track:
+        track = self.track
+        if not track.name or not track.artist:
             return None
 
-        if "artists" in track:
-            sp_artist = track['artists'][0]
+        if track.artist:
             search_query = "{0} - {1}".format(
-                sp_artist['name'],
-                track['name'])
+                track.artist,
+                track.name)
         else:
-            search_query = "{0}".format(self.sp_track['name'])
+            search_query = "{0}".format(track.name)
         return search_query
 
 

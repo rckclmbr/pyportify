@@ -44,8 +44,8 @@ class Mobileclient(object):
                                                "ct": "1,2,3,4,6,7,8,9"})
         return data
 
-    async def find_best_track(self, search_query):
-        track = None
+    async def find_best_tracks(self, search_query):
+        tracks = []
         for i in range(0, 2):
             data = await self.search_all_access(search_query)
             if 'suggestedQuery' in data:
@@ -55,11 +55,10 @@ class Mobileclient(object):
                 continue
             for entry in data["entries"]:
                 if entry["type"] == "1":
-                    track = entry["track"]
-                    break
-            if track:
+                    tracks.append(entry["track"])
+            if tracks:
                 break
-        return track
+        return tracks
 
     async def fetch_playlists(self):
         data = await self._http_post("/playlistfeed", {})

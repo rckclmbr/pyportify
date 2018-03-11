@@ -11,10 +11,11 @@ import sys
 from aiohttp import web, ClientSession
 from aiohttp.web import json_response
 
-from pyportify.middlewares import IndexMiddleware
-from pyportify.spotify import SpotifyClient, SpotifyQuery
 from pyportify.google import Mobileclient
-from pyportify.util import uprint, grouper
+from pyportify.middlewares import IndexMiddleware
+from pyportify.serializers import Track
+from pyportify.spotify import SpotifyClient, SpotifyQuery
+from pyportify.util import uprint, find_closest_match, grouper
 
 IS_BUNDLED = getattr(sys, 'frozen', False)
 
@@ -207,12 +208,14 @@ async def search_gm_track(request, g, sp_query):
         track = None
         search_query = sp_query.search_query()
         if search_query:
-            track = await g.find_best_track(search_query)
+            tracks = await g.find_best_tracks(search_query)
+            serialized_tracks = [Track.from_gpm(track) for track in tracks]
+            track = find_closest_match(sp_query.track, serialized_tracks)
         if track:
             gm_log_found(sp_query)
             await emit_added_event(request, True,
                                    sp_query.playlist_uri, search_query)
-            return track.get('storeId')
+            return track.track_id
 
         gm_log_not_found(sp_query)
         await emit_added_event(request, False,
