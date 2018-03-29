@@ -8,19 +8,19 @@ class Track():
         self.name = name
         self.track_id = track_id
 
-    @staticmethod
-    def from_spotify(self, track):
+    @classmethod
+    def from_spotify(cls, track):
         track_id = track.get("id")
         name = track.get("name")
         artist = ""
         if "artists" in track:
             artist = track["artists"][0]["name"]
 
-        return Track(artist, name, track_id)
+        return cls(artist, name, track_id)
 
-    @staticmethod
-    def from_gpm(self, track):
-        return Track(
+    @classmethod
+    def from_gpm(cls, track):
+        return cls(
             track.get("artist"),
             track.get("title"),
             track.get("storeId")
