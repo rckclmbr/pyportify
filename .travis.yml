@@ -36,9 +36,8 @@ matrix:
           sudo: required
           before_install:
             - "sudo apt-get update"
-            - "sudo apt-get install python-all-dev pandoc"
+            - "sudo apt-get install python-all-dev"
             - "pip3 install tox"
-            - "pandoc -f markdown -t rst -o README.rst README.md"
 before_install:
 
   # Install python 3.6.3 on OS X
@@ -71,9 +70,6 @@ before_install:
 
       echo Upgrading pip...;
       pip install --upgrade pip;
-
-      echo Installing pandoc...;
-      brew install pandoc;
 
       echo Installing package dependencies...;
       pip3 install pyinstaller==3.3 tox;

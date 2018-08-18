@@ -6,7 +6,6 @@ tmp
 build
 dist
 pyportify.egg-info
-README.rst
 
 pyportify.zip
 pyportify-*

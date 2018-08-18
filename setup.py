@@ -3,22 +3,11 @@
 from distutils.core import setup
 from setuptools import find_packages
 import os
+import pathlib
 import re
 
 basepath = os.path.dirname(__file__)
 requirements_txt = os.path.join(basepath, "requirements.txt")
-
-try:
-    import pypandoc
-    long_description = pypandoc.convert_file('README.md', 'rst')
-    long_description = long_description.replace("\r", "")
-except (ImportError, OSError):
-    print("Pandoc not found. Long_description conversion failure.")
-    import io
-    # pandoc is not installed, fallback to using raw contents
-    with io.open('README.md', encoding="utf-8") as f:
-        long_description = f.read()
-
 
 with open(requirements_txt) as reqs:
     install_requires = [
@@ -44,7 +33,8 @@ args = dict(
     license='Apache 2.0',
     description='App to transfer your spotify playlists to Google Play '
                 'Music',
-    long_description=long_description,
+    long_description=pathlib.Path('README.md').read_text(),
+    long_description_content_type='text/markdown', 
     classifiers=['Environment :: Web Environment'],
     entry_points={
         'console_scripts': ['pyportify = pyportify.server:main',
