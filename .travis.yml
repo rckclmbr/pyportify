@@ -74,7 +74,6 @@ before_install:
       echo Installing package dependencies...;
       pip3 install pyinstaller==3.3 tox;
       pip3 install -r requirements.txt;
-      pandoc -f markdown -t rst -o README.rst README.md;
     fi
 
 script: tox
