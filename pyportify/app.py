@@ -122,6 +122,13 @@ async def transfer_playlists(request, s, g, sp_playlist_uris):
             sp_playlist_uri)
 
         track_count = len(sp_playlist_tracks)
+        if track_count == 0:
+            uprint(
+                "Skipping empty playlist %s" %
+                (sp_playlist['name'])
+            )
+            continue
+
         uprint(
             "Gathering tracks for playlist %s (%s)" %
             (sp_playlist['name'], track_count)
