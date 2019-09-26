@@ -36,7 +36,7 @@ $ brew install python3
 $ pip3 install pyportify
 ```
 
-Ubuntu:
+Debian and derivatives, like Ubuntu:
 
 ```bash
 sudo apt-get update
