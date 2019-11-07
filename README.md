@@ -36,6 +36,16 @@ $ brew install python3
 $ pip3 install pyportify
 ```
 
+If you are having issues with ```pyportify: command not found```, please make sure you have set your ```PATH``` correctly.
+
+
+If you are having permission error messages with pip on installation, uninstall pyportify then reinstall using the commands below:
+
+```bash
+$ pip3 uninstall pyportify
+$ sudo -H pip3 install pyportify
+```
+
 Ubuntu:
 
 ```bash
